@@ -26,3 +26,11 @@ data/avatars/
 
 # 스크래치 폴더의 대용량 파일 (다운받은 시트 캐시)
 scratch/sheet.xlsx
+
+# IDE/에디터 설정
+.claude/
+.vscode/
+.idea/
+
+# 잡다한 테스트 파일
+test_encoding.json

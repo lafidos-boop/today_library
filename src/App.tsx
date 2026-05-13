@@ -287,7 +287,7 @@ export default function App() {
       if (res.ok) {
         await fetchBooks();
         await fetchLoans();
-        toastApi.success('반납 처리가 완료되었습니다.');
+        toastApi.returnSuccess({ bookTitle, userName: currentUser?.name || '' });
         setScreen('my-loans');
         setSelectedBook(null);
       } else {
@@ -417,6 +417,7 @@ export default function App() {
                   await fetchLoans();
                   await fetchBooks();
                 }}
+                userName={currentUser?.name || ''}
               />
             </motion.div>
           )}

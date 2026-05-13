@@ -11,11 +11,13 @@ export const MyLoansScreen = ({
   setLoans,
   selectBook,
   refreshLoans,
+  userName,
 }: {
   loans: LoanWithBook[];
   setLoans: React.Dispatch<React.SetStateAction<LoanWithBook[]>>;
   selectBook: (b: Book) => void;
   refreshLoans: () => void;
+  userName: string;
 }) => {
   const [activeAction, setActiveAction] = useState<{
     type: 'return' | 'extend';
@@ -73,7 +75,11 @@ export const MyLoansScreen = ({
         });
       }
       await refreshLoans();
-      toastApi.success(activeAction.type === 'return' ? '반납 처리가 완료되었습니다.' : '대출 기간이 연장되었습니다.');
+      if (activeAction.type === 'return') {
+        toastApi.returnSuccess({ bookTitle: activeAction.bookTitle, userName });
+      } else {
+        toastApi.success('대출 기간이 연장되었습니다.');
+      }
     } catch (error) {
       console.error('Action failed:', error);
       toastApi.error('처리 중 오류가 발생했습니다. 다시 시도해 주세요.');

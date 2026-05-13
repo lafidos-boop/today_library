@@ -154,11 +154,11 @@ export const ProfileScreen = ({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-onSurfaceVariant px-1 uppercase tracking-wider opacity-60">아이디 또는 이메일</label>
+          <label className="text-[10px] font-bold text-onSurfaceVariant px-1 uppercase tracking-wider opacity-60">휴대전화번호</label>
           <input
-            type="text"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             className="w-full bg-surfaceContainerLow border-none rounded-xl py-3 px-5 text-base focus:ring-2 focus:ring-primary/20 transition-all font-medium"
           />
         </div>

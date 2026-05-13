@@ -97,12 +97,16 @@ export const AdminDashboard = ({
   // 연체자 리스트는 실 대출(allLoans)에서 isOverdue=true인 항목을 추출 (백엔드에서 동적 계산됨)
   const overdueMembers = allLoans
     .filter((l: any) => l.isOverdue)
-    .map((l: any) => ({
-      name: l.userName || '회원',
-      bookTitle: l.bookTitle || '도서',
-      loanDate: l.borrowDate || '-',
-      overdueDays: l.dDay || 0,
-    }));
+    .map((l: any) => {
+      const member = allMembers.find((m: any) => m.id === l.userId);
+      return {
+        name: l.userName || '회원',
+        bookTitle: l.bookTitle || '도서',
+        loanDate: l.borrowDate || '-',
+        overdueDays: l.dDay || 0,
+        phone: member?.phone || '',
+      };
+    });
 
   // === Kakao Books API: 도서 업로드 시 ISBN/표지 자동 매칭 ===
   const fetchFromKakao = async (query: string, isIsbn: boolean = true) => {

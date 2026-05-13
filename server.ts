@@ -4,7 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcrypt';
 // 데이터 저장소: 로컬 JSON 파일 → 구글시트 (4개 탭)로 마이그레이션됨
-import * as sheetsDb from './sheetsDb';
+// (Vercel ESM 환경에서는 import에 .js 확장자가 필요. tsx는 로컬에서 그대로 처리.)
+import * as sheetsDb from './sheetsDb.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

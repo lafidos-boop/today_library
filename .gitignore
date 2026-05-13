@@ -1,0 +1,28 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# 비공개 서비스 계정 키 파일 — 절대 깃에 올리지 말 것
+secrets/
+*.key.json
+*-key.json
+
+# 마이그레이션 백업 파일
+data/*.bak.*
+
+# 레거시 JSON DB는 더 이상 사용 안 함 (구글시트가 source of truth).
+# 단, ISBN 캐시는 서버 시작 시 읽어야 하므로 포함.
+data/users.json
+data/applications.json
+data/loans.json
+data/activities.json
+data/db.json
+data/avatars/
+
+# 스크래치 폴더의 대용량 파일 (다운받은 시트 캐시)
+scratch/sheet.xlsx

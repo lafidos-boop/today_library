@@ -1,6 +1,6 @@
 // 관리자 — 연체자 목록 (실 대출에서 isOverdue=true 항목 추출).
 import React from 'react';
-import { AlertCircle, Phone, UserCircle } from 'lucide-react';
+import { AlertCircle, Phone, User } from 'lucide-react';
 import { ScreenWrapper, SubPageHeader } from '../../components/Layout';
 
 type OverdueRow = { name: string; bookTitle: string; loanDate: string; overdueDays: number; phone?: string };
@@ -39,7 +39,7 @@ export const OverdueMembers = ({
           {(item.name || item.phone) && (
             <div className="flex items-center justify-between border-t border-[#e2e3d6]/20 pt-2 px-0.5">
               <div className="flex items-center gap-1.5 text-[12px] text-onSurfaceVariant font-bold">
-                <UserCircle size={11} className="opacity-50 shrink-0" />
+                <User size={11} className="opacity-50 shrink-0" />
                 <span>{item.name}</span>
               </div>
               {item.phone && (

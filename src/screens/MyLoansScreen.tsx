@@ -24,9 +24,11 @@ export const MyLoansScreen = ({
     loanId: number;
     bookId: string;
     bookTitle: string;
+    borrowDate?: string;
     newDate?: string;
     newDDay?: number;
   } | null>(null);
+  const [extendCopied, setExtendCopied] = useState(false);
 
   const handleReturnRequest = (loan: any) => {
     setActiveAction({
@@ -53,9 +55,32 @@ export const MyLoansScreen = ({
       loanId: loan.id,
       bookId: loan.bookId,
       bookTitle: loan.book.title,
+      borrowDate: loan.borrowDate,
       newDate,
       newDDay: (loan.dDay || 0) - 7,
     });
+  };
+
+  const handleExtendWithCopy = async () => {
+    if (!activeAction) return;
+    const text = `[연장합니다]\n1. 책제목: ${activeAction.bookTitle}\n2. 연장자이름: ${userName}\n3. 대출기간: ${activeAction.borrowDate} ~ ${activeAction.newDate}`;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setExtendCopied(true);
+    setTimeout(() => {
+      setExtendCopied(false);
+      handleActionConfirm();
+    }, 1400);
   };
 
   const handleActionConfirm = async () => {
@@ -140,16 +165,31 @@ export const MyLoansScreen = ({
                   )}
                 </div>
               </div>
-              <button
-                onClick={handleActionConfirm}
-                className={`w-full py-3.5 rounded-xl font-black text-sm shadow-lg transition-all active:scale-95 ${
-                  activeAction.type === 'return'
-                    ? 'bg-[#af7c73] text-white shadow-[#af7c73]/20'
-                    : 'bg-primary text-white shadow-primary/20'
-                }`}
-              >
-                확인
-              </button>
+              {activeAction.type === 'extend' ? (
+                <button
+                  onClick={handleExtendWithCopy}
+                  disabled={extendCopied}
+                  className="w-full py-3.5 rounded-xl font-black text-sm shadow-lg transition-all active:scale-95 bg-[#FEE500] text-black shadow-yellow-200/50 flex items-center justify-center gap-2 disabled:opacity-80"
+                >
+                  {extendCopied ? (
+                    '카카오톡 메세지가 복사되었습니다.'
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="black">
+                        <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.527 1.523 4.74 3.813 6.063l-.938 3.5 4.063-2.688A11.4 11.4 0 0 0 12 17.5c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
+                      </svg>
+                      카카오톡 메세지 복사 후 확인
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={handleActionConfirm}
+                  className="w-full py-3.5 rounded-xl font-black text-sm shadow-lg transition-all active:scale-95 bg-[#af7c73] text-white shadow-[#af7c73]/20"
+                >
+                  확인
+                </button>
+              )}
             </div>
           </motion.div>
         )}

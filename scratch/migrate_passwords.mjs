@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const ROUNDS = 10;
 const ROOT = path.resolve('.');

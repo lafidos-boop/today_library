@@ -2,7 +2,9 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import bcrypt from 'bcrypt';
+// bcrypt(native binding) → bcryptjs(순수 JS)로 교체.
+// Vercel serverless 환경에서 native module이 안정적이지 않아 compare가 false 반환하는 이슈 해결.
+import bcrypt from 'bcryptjs';
 // 데이터 저장소: 로컬 JSON 파일 → 구글시트 (4개 탭)로 마이그레이션됨
 // (Vercel ESM 환경에서는 import에 .js 확장자가 필요. tsx는 로컬에서 그대로 처리.)
 import * as sheetsDb from './sheetsDb.js';

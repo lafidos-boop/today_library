@@ -466,7 +466,14 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <BottomNav active={screen === 'book-detail' || screen === 'admin' || screen === 'search-results' ? 'home' : screen} setScreen={setScreen} />
+      <BottomNav
+        active={
+          screen === 'book-detail'
+            ? (bookDetailSource === 'my-loans' ? 'my-loans' : 'home')
+            : (screen === 'admin' || screen === 'search-results' ? 'home' : screen)
+        }
+        setScreen={setScreen}
+      />
     </div>
   );
 }

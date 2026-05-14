@@ -5,13 +5,19 @@
 // - SubPageHeader: 관리자 하위 페이지 제목 + 뒤로가기 라운드 버튼
 import React from 'react';
 import {
-  Menu,
   ArrowLeft,
   Home,
   Book as BookIcon,
   User,
 } from 'lucide-react';
 import type { Screen } from '../types';
+
+const BookLogoIcon = ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M2 4C2 3.45 2.45 3 3 3H10.5C11.33 3 12 3.67 12 4.5V20.5C12 20.5 9.5 19.5 7 19.5H3C2.45 19.5 2 19.05 2 18.5V4Z" opacity="0.85"/>
+    <path d="M22 4C22 3.45 21.55 3 21 3H13.5C12.67 3 12 3.67 12 4.5V20.5C12 20.5 14.5 19.5 17 19.5H21C21.55 19.5 22 19.05 22 18.5V4Z"/>
+  </svg>
+);
 
 export const ScreenWrapper = ({ children }: { children: React.ReactNode }) => (
   // AnimatePresence가 화면 전환 애니메이션을 이미 처리하므로 여기서는 정적 div 사용.
@@ -116,9 +122,9 @@ export const Header = ({
             <ArrowLeft size={24} />
           </button>
         ) : (
-          <button className="p-2 -ml-2 text-primary">
-            <Menu size={24} />
-          </button>
+          <div className="p-2 -ml-2 text-primary">
+            <BookLogoIcon size={24} />
+          </div>
         )}
         <span className="text-xl font-black text-primary tracking-tight">{title}</span>
       </div>

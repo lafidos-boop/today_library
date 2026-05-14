@@ -332,28 +332,24 @@ export const AdminDashboard = ({
       </div>
 
       <div className="grid grid-cols-3 gap-2.5 mb-8">
-        <div className="bg-white p-3.5 rounded-2xl border-l-4 border-[#add461] shadow-sm">
+        <div className="bg-white p-3.5 rounded-2xl border-l-4 border-[#add461] shadow-sm flex flex-col">
           <span className="text-[11px] font-bold text-onSurfaceVariant uppercase tracking-widest block mb-1.5 opacity-50">총 회원</span>
-          <div className="flex flex-col">
-            <h3 className="text-xl font-black text-primary tracking-tight">{allMembers.length}</h3>
-            <div className="flex items-center gap-1 text-[#5d7f13] text-[10px] font-bold mt-0.5">
-              <span>명</span>
-            </div>
-          </div>
+          <h3 className="text-xl font-black text-primary tracking-tight">{allMembers.length}</h3>
+          <span className="text-[10px] font-bold text-[#5d7f13] mt-0.5">명</span>
         </div>
-        <div className="bg-white p-3.5 rounded-2xl border-l-4 border-primary/20 shadow-sm">
+        <div className="bg-white p-3.5 rounded-2xl border-l-4 border-primary/20 shadow-sm flex flex-col">
           <span className="text-[11px] font-bold text-onSurfaceVariant uppercase tracking-widest block mb-1.5 opacity-50">대출 중</span>
           <h3 className="text-xl font-black text-onSurface tracking-tight">{allLoans.length}</h3>
+          <span className="text-[10px] font-bold text-onSurfaceVariant mt-0.5 opacity-0">-</span>
         </div>
         <button
           onClick={() => setSubView('overdue-members')}
-          className="bg-[#fcf8f7] p-3.5 rounded-2xl border-l-4 border-[#e2c1bb] shadow-sm text-left active:scale-95 transition-all"
+          className="bg-[#fcf8f7] p-3.5 rounded-2xl border-l-4 border-[#e2c1bb] shadow-sm text-left active:scale-95 transition-all flex flex-col relative"
         >
           <span className="text-[11px] font-bold text-onSurfaceVariant uppercase tracking-widest block mb-1.5 opacity-50">연체</span>
-          <div className="flex items-end justify-between">
-            <h3 className="text-xl font-black text-[#af7c73] tracking-tight">{overdueMembers.length}</h3>
-            <ChevronRight size={16} className="text-[#af7c73] opacity-40 mb-0.5" />
-          </div>
+          <h3 className="text-xl font-black text-[#af7c73] tracking-tight">{overdueMembers.length}</h3>
+          <span className="text-[10px] font-bold text-[#af7c73] mt-0.5 opacity-0">-</span>
+          <ChevronRight size={16} className="text-[#af7c73] opacity-40 absolute bottom-3.5 right-3" />
         </button>
       </div>
 

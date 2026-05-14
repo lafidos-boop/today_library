@@ -1,8 +1,6 @@
 // 관리자 대시보드 — 운영 현황 요약 + 빠른 실행 + sub-view 디스패치.
 import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-import * as XLSX from 'xlsx';
-import { ChevronRight, FileSpreadsheet, AlertCircle, Users, Clock, RefreshCw } from 'lucide-react';
+import { ChevronRight, FileSpreadsheet, Users, Clock, RefreshCw } from 'lucide-react';
 import { ScreenWrapper } from '../../components/Layout';
 import { toastApi } from '../../toast';
 import type { Screen, Book } from '../../types';
@@ -11,8 +9,9 @@ import { AllMembers } from './AllMembers';
 import { OverdueMembers } from './OverdueMembers';
 import { UploadStatus } from './UploadStatus';
 import { ActivityLog, type ActivityFilter } from './ActivityLog';
+import { BookSearchUpload } from './BookSearchUpload';
 
-type SubView = 'main' | 'members' | 'all-members' | 'overdue-members' | 'upload-status' | 'activities';
+type SubView = 'main' | 'members' | 'all-members' | 'overdue-members' | 'upload-status' | 'activities' | 'book-search';
 
 export const AdminDashboard = ({
   setScreen,
@@ -29,8 +28,6 @@ export const AdminDashboard = ({
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [lastUploaded, setLastUploaded] = useState<string | null>(null);
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>('all');
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -108,105 +105,6 @@ export const AdminDashboard = ({
       };
     });
 
-  // === Kakao Books API: 도서 업로드 시 ISBN/표지 자동 매칭 ===
-  const fetchFromKakao = async (query: string, isIsbn: boolean = true) => {
-    const apiKey = import.meta.env.VITE_KAKAO_API_KEY;
-    if (!apiKey || apiKey === 'YOUR_KAKAO_API_KEY') return null;
-
-    try {
-      const target = isIsbn ? 'isbn' : 'title';
-      const cleanQuery = isIsbn ? query.replace(/-/g, '').trim() : query.trim();
-      const response = await fetch(
-        `https://dapi.kakao.com/v3/search/book?target=${target}&query=${encodeURIComponent(cleanQuery)}`,
-        { headers: { Authorization: `KakaoAK ${apiKey}` } },
-      );
-      const data = await response.json();
-      if (data.documents && data.documents.length > 0) {
-        const doc = data.documents[0];
-        return {
-          title: doc.title,
-          author: doc.authors.join(', '),
-          publisher: doc.publisher,
-          cover: doc.thumbnail,
-          description: doc.contents,
-          isbn: doc.isbn.split(' ')[0],
-        };
-      }
-    } catch (e) {
-      console.error('Kakao API fetch failed:', e);
-    }
-    return null;
-  };
-
-  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    setUploadError(null);
-    if (!file) return;
-
-    const extension = file.name.split('.').pop()?.toLowerCase();
-    if (!['xlsx', 'xls', 'csv'].includes(extension || '')) {
-      setUploadError('File types are not supported. .xlsx, .xls, .csv 파일만 업로드 가능합니다.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      setIsUploading(true);
-      try {
-        const data = evt.target?.result;
-        const wb = XLSX.read(data, { type: 'array' });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(ws);
-
-        if (jsonData.length === 0) {
-          setUploadError('파일에 데이터가 없습니다.');
-          setIsUploading(false);
-          return;
-        }
-
-        const transformedBooks: Book[] = [];
-        for (const row of jsonData as any[]) {
-          const isbn = String(row['ISBN'] || row['isbn'] || '');
-          const title = String(row['제목'] || row['Title'] || '');
-          let apiInfo = null;
-          if (isbn && isbn.length >= 10) {
-            apiInfo = await fetchFromKakao(isbn, true);
-          } else if (title && title.length > 0) {
-            apiInfo = await fetchFromKakao(title, false);
-          }
-
-          transformedBooks.push({
-            id: String(row['도서코드'] || row['ID'] || `BD-${Math.random().toString(36).substr(2, 4).toUpperCase()}`),
-            isbn: apiInfo?.isbn || isbn,
-            title: apiInfo?.title || title || '제목 없음',
-            author: apiInfo?.author || String(row['저자'] || row['Author'] || '저자 미상'),
-            publisher: apiInfo?.publisher || String(row['출판사'] || row['Publisher'] || '출판사 미상'),
-            genre: String(row['장르'] || row['Genre'] || '일반'),
-            cover: apiInfo?.cover || String(row['표지'] || `https://picsum.photos/seed/${title || Math.random()}/400/600`),
-            location: {
-              shelf: String(row['서가'] || row['Shelf'] || '-'),
-              row: String(row['행'] || row['Row'] || '-'),
-              col: String(row['열'] || row['Col'] || '-'),
-              room: String(row['위치(열람실)'] || row['Room'] || '새벽도서관'),
-            },
-            status: 'available',
-          });
-        }
-
-        setBooks(transformedBooks);
-        setLastUploaded(file.name);
-        setSubView('upload-status');
-      } catch (err) {
-        console.error('Excel Read Error:', err);
-        setUploadError('파일을 읽는 중 오류가 발생했습니다.');
-      } finally {
-        setIsUploading(false);
-      }
-    };
-    reader.onerror = () => setUploadError('파일을 읽지 못했습니다.');
-    reader.readAsArrayBuffer(file);
-  };
-
   const approveMember = async (id: number, role: '일반' | '관리자') => {
     const applicant = applicants.find((a) => a.id === id);
     if (!applicant) return;
@@ -247,17 +145,6 @@ export const AdminDashboard = ({
       console.error('Approval failed:', error);
       toastApi.error('승인 처리 중 오류가 발생했습니다.');
     }
-  };
-
-  const downloadSampleExcel = () => {
-    const sampleData = [
-      { 도서코드: 'BD-0001', 제목: '숲의 목소리: 식물의 언어를 듣다', 저자: '한지수', 출판사: '오늘출판사', 장르: '자연과학 / 에세이', 서가: 'A책장', 행: '2행', 열: '3열', '위치(열람실)': '제1열람실' },
-      { 도서코드: 'BD-0002', 제목: '식물학자의 일기', 저자: '김오늘', 출판사: '그린북스', 장르: '자연과학', 서가: 'B책장', 행: '1행', 열: '5열', '위치(열람실)': '제1열람실' },
-    ];
-    const ws = XLSX.utils.json_to_sheet(sampleData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '도서목록');
-    XLSX.writeFile(wb, 'today_library_sample.xlsx');
   };
 
   const handleUpdateMember = async (memberId: string, updateData: any) => {
@@ -323,6 +210,8 @@ export const AdminDashboard = ({
         onGotoApprovals={() => setSubView('members')}
       />
     );
+  if (subView === 'book-search')
+    return <BookSearchUpload onBack={() => setSubView('main')} />;
 
   // === 메인 화면 ===
   return (
@@ -387,62 +276,33 @@ export const AdminDashboard = ({
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4 px-1 gap-2">
           <h3 className="text-[10px] font-black text-onSurfaceVariant uppercase tracking-widest opacity-50">빠른 실행</h3>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={forceSync}
-              disabled={isSyncing}
-              className="text-primary font-bold text-[10px] flex items-center gap-1.5 bg-primary/5 px-2.5 py-1.5 rounded-lg active:scale-95 transition-all disabled:opacity-40"
-            >
-              <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
-              {isSyncing ? '동기화 중...' : '도서 동기화'}
-            </button>
-            <button
-              onClick={downloadSampleExcel}
-              className="text-primary font-bold text-[10px] flex items-center gap-1.5 bg-primary/5 px-2.5 py-1.5 rounded-lg active:scale-95 transition-all"
-            >
-              <FileSpreadsheet size={12} />
-              샘플 양식
-            </button>
-          </div>
+          <button
+            onClick={forceSync}
+            disabled={isSyncing}
+            className="text-primary font-bold text-[10px] flex items-center gap-1.5 bg-primary/8 px-2.5 py-1.5 rounded-lg active:scale-95 transition-all disabled:opacity-40"
+          >
+            <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
+            {isSyncing ? '동기화 중...' : '도서 동기화'}
+          </button>
         </div>
 
-        {uploadError && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 bg-error/10 border border-error/20 rounded-xl flex items-start gap-2 text-error text-[11px] font-bold"
-          >
-            <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
-            <p>{uploadError}</p>
-          </motion.div>
-        )}
-
         <div className="grid grid-cols-4 gap-2 text-center">
-          <label
-            className={`cursor-pointer flex flex-col items-center justify-center gap-2 bg-primary text-white py-3 px-1 rounded-xl transition-all active:scale-95 shadow-lg shadow-primary/10 ${
-              isUploading ? 'opacity-50 pointer-events-none' : ''
-            }`}
+          <button
+            onClick={() => setSubView('book-search')}
+            className="flex flex-col items-center justify-center gap-2 bg-[#e6eacb] text-primary py-3 px-1 rounded-xl transition-all active:scale-95"
           >
-            <input
-              type="file"
-              accept=".xlsx, .xls, .csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, text/csv"
-              className="hidden"
-              onChange={handleExcelUpload}
-            />
-            <div className="p-2 bg-white/20 rounded-lg">
-              {isUploading ? (
-                <div className="w-[18px] h-[18px] border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <FileSpreadsheet size={18} />
-              )}
+            <div className="p-2 bg-primary/15 rounded-lg">
+              <FileSpreadsheet size={18} />
             </div>
-            <span className="text-[10px] font-black leading-tight">{isUploading ? '조회 중...' : '도서\n업로드'}</span>
-          </label>
+            <span className="text-[10px] font-black leading-tight">
+              도서 <br /> 업로드
+            </span>
+          </button>
           <button
             onClick={() => setSubView('members')}
-            className="flex flex-col items-center justify-center gap-2 bg-[#eeefe2] text-primary py-3 px-1 rounded-xl transition-all active:scale-95 relative"
+            className="flex flex-col items-center justify-center gap-2 bg-[#e6eacb] text-primary py-3 px-1 rounded-xl transition-all active:scale-95 relative"
           >
-            <div className="p-2 bg-primary/10 rounded-lg">
+            <div className="p-2 bg-primary/15 rounded-lg">
               <FileSpreadsheet size={18} />
             </div>
             <span className="text-[10px] font-black leading-tight">
@@ -456,9 +316,9 @@ export const AdminDashboard = ({
           </button>
           <button
             onClick={() => setSubView('all-members')}
-            className="flex flex-col items-center justify-center gap-2 bg-[#eeefe2] text-primary py-3 px-1 rounded-xl transition-all active:scale-95"
+            className="flex flex-col items-center justify-center gap-2 bg-[#e6eacb] text-primary py-3 px-1 rounded-xl transition-all active:scale-95"
           >
-            <div className="p-2 bg-primary/10 rounded-lg">
+            <div className="p-2 bg-primary/15 rounded-lg">
               <Users size={18} />
             </div>
             <span className="text-[10px] font-black leading-tight">
@@ -467,9 +327,9 @@ export const AdminDashboard = ({
           </button>
           <button
             onClick={() => setSubView('activities')}
-            className="flex flex-col items-center justify-center gap-2 bg-[#eeefe2] text-primary py-3 px-1 rounded-xl transition-all active:scale-95"
+            className="flex flex-col items-center justify-center gap-2 bg-[#e6eacb] text-primary py-3 px-1 rounded-xl transition-all active:scale-95"
           >
-            <div className="p-2 bg-primary/10 rounded-lg">
+            <div className="p-2 bg-primary/15 rounded-lg">
               <Clock size={18} />
             </div>
             <span className="text-[10px] font-black leading-tight">

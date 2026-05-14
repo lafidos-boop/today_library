@@ -406,6 +406,50 @@ app.post('/api/books', async (req, res) => {
   res.json({ success: true, note: 'Books are now sourced from Google Sheets; POST is a no-op.' });
 });
 
+// 단일 도서를 구글 시트에 추가하고 캐시를 무효화
+app.post('/api/books/add', async (req, res) => {
+  try {
+    const { title, author, publisher, genre, isbn, cover, room, shelf, row, col } = req.body;
+
+    if (!title || !room) {
+      return res.status(400).json({ error: '제목(title)과 열람실(room)은 필수입니다.' });
+    }
+    if (!TARGET_SHEETS.includes(room)) {
+      return res.status(400).json({ error: `유효하지 않은 열람실입니다. 가능한 값: ${TARGET_SHEETS.join(', ')}` });
+    }
+
+    const prefix = SHEET_PREFIX[room];
+    const rows = await sheetsDb.listAll(room);
+    let maxCodeNum = 0;
+    for (const r of rows) {
+      const m = String(r['도서코드'] || '').match(new RegExp(`^${prefix}-?(\\d+)$`));
+      if (m) maxCodeNum = Math.max(maxCodeNum, parseInt(m[1], 10));
+    }
+    const newCode = `${prefix}-${String(maxCodeNum + 1).padStart(5, '0')}`;
+
+    await sheetsDb.append(room, {
+      '도서코드': newCode,
+      '제목': title,
+      '저자': author || '',
+      '출판사': publisher || '',
+      '장르': genre || '일반',
+      '서가': shelf || '',
+      '행': row || '',
+      '열': col || '',
+      'ISBN': isbn || '',
+      '표지': cover || '',
+    });
+
+    // 캐시 무효화 — 다음 /api/books 호출 시 구글 시트에서 재동기화
+    lastSyncAt = 0;
+
+    res.json({ ok: true, bookId: newCode, title });
+  } catch (error) {
+    console.error('POST /api/books/add error:', error);
+    res.status(500).json({ error: '도서 추가 중 오류가 발생했습니다.' });
+  }
+});
+
 app.get('/api/applications', async (req, res) => {
   try { res.json(await sheetsDb.listAll('applications')); }
   catch (error) { console.error('GET /api/applications error:', error); res.json([]); }

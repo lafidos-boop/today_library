@@ -368,7 +368,8 @@ export default function App() {
     <div className="min-h-screen bg-surface font-sans text-onSurface w-full max-w-md mx-auto relative shadow-2xl shadow-primary/10 overflow-x-hidden">
       <Header
         title={getHeaderTitle()}
-        showBack={screen === 'book-detail' || screen === 'admin' || screen === 'search-results'}
+        showBack={screen === 'book-detail' || screen === 'search-results'}
+        exitLabel={screen === 'admin' ? '밖으로' : undefined}
         onBack={handleBack}
       />
       

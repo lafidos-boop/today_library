@@ -1,6 +1,6 @@
 // 로그인 화면 — POST /api/login으로 인증, 일반/관리자 모드 분기.
 import React, { useState } from 'react';
-import { Book as BookIcon, User, Clock } from 'lucide-react';
+import { Sprout, User, Clock } from 'lucide-react';
 import { toastApi } from '../toast';
 
 export const LoginScreen = ({
@@ -65,12 +65,14 @@ export const LoginScreen = ({
       <div className="absolute top-[-10%] right-[-5%] w-72 h-72 rounded-full bg-[#add461]/10 blur-3xl" />
       <div className="absolute bottom-[-10%] left-[-5%] w-64 h-64 rounded-full bg-[#86fab0]/10 blur-3xl" />
 
-      <div className="flex flex-col items-center mb-10 text-center z-10">
-        <div className="w-16 h-16 mb-4 rounded-2xl flex items-center justify-center bg-gradient-to-br from-[#476500] to-[#5d7f13] shadow-lg text-white">
-          <BookIcon size={32} />
+      <div className="flex items-center gap-5 mb-10 z-10">
+        <div className="w-[60px] h-[60px] rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <Sprout size={28} className="text-primary/80" strokeWidth={1.5} />
         </div>
-        <h1 className="text-4xl font-black text-primary mb-2">오늘책방</h1>
-        <p className="text-onSurfaceVariant font-medium">오늘의 지혜를 내일의 빛으로</p>
+        <div>
+          <h1 className="text-3xl font-black text-primary leading-tight tracking-tight">오늘책방</h1>
+          <p className="text-xs text-onSurfaceVariant/70 font-medium mt-1 tracking-wide">오늘의 지혜를 내일의 빛으로</p>
+        </div>
       </div>
 
       <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-xl shadow-primary/5 z-10 border border-[#e2e3d6]/30">

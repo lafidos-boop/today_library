@@ -106,16 +106,15 @@ export const Header = ({
 }) => (
   <header className="fixed top-0 left-0 w-full z-50 bg-[#fafaed]/80 backdrop-blur-xl border-b border-[#e2e3d6]/20">
     <div className="flex items-center px-5 h-12 w-full max-w-md mx-auto gap-2">
-      {showBack ? (
+      {showBack && (
         <button
           onClick={onBack}
           className="-ml-1 p-1.5 text-primary/70 rounded-lg active:bg-primary/10 transition-all"
         >
           <ArrowLeft size={20} />
         </button>
-      ) : (
-        <Leaf size={14} className="text-primary/50 flex-shrink-0" />
       )}
+      <Leaf size={14} className="text-primary/50 flex-shrink-0" />
       <span className="text-base font-black text-primary/80 tracking-tight">{title}</span>
     </div>
   </header>

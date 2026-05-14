@@ -26,8 +26,8 @@ export const HomeScreen = ({
   return (
     <ScreenWrapper>
       <header className="mb-6 mt-2">
-        <h1 className="text-3xl font-black text-onSurface mb-1">반가워요, {userName}님</h1>
-        <p className="text-onSurfaceVariant font-medium">지혜의 숲에서 당신을 기다리고 있어요.</p>
+        <h1 className="text-2xl font-bold text-onSurface/80 mb-1">반가워요, {userName}님</h1>
+        <p className="text-sm text-onSurfaceVariant/70 font-medium">지혜의 숲에서 당신을 기다리고 있어요.</p>
       </header>
 
       {/* 1. 나의 대출 현황 */}

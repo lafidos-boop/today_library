@@ -114,8 +114,8 @@ export const Header = ({
           <ArrowLeft size={20} />
         </button>
       )}
-      <Leaf size={14} className="text-primary/50 flex-shrink-0" />
-      <span className="text-base font-black text-primary/80 tracking-tight">{title}</span>
+      <Leaf size={18} className="text-primary/60 flex-shrink-0" />
+      <span className="text-xl font-black text-primary tracking-tight">{title}</span>
     </div>
   </header>
 );

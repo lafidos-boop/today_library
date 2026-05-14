@@ -79,18 +79,17 @@ export const HomeScreen = ({
       </div>
 
       {/* 3. QR 코드로 검색 (미구현 — 추후 작업) */}
-      <motion.button
-        whileTap={{ scale: 0.98 }}
-        className="w-full p-5 bg-[#add461] text-[#1a1c15] rounded-3xl flex flex-row items-center gap-5 shadow-lg shadow-primary/5 mb-8"
-      >
-        <div className="p-3 bg-white/40 rounded-2xl flex-shrink-0">
-          <QrCode size={24} />
-        </div>
-        <div className="text-left">
-          <h3 className="text-lg font-black leading-tight">QR코드로 검색</h3>
-          <p className="text-xs opacity-70 font-bold">도서의 QR 코드를 스캔하세요</p>
-        </div>
-      </motion.button>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="flex-1 h-px bg-[#e2e3d6]" />
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 px-4 py-2 bg-[#eeefe2] text-[#76786D] rounded-full text-xs font-bold border border-[#dcddd0] active:scale-95 transition-all"
+        >
+          <QrCode size={13} />
+          <span>QR코드로 검색</span>
+        </motion.button>
+        <div className="flex-1 h-px bg-[#e2e3d6]" />
+      </div>
     </ScreenWrapper>
   );
 };

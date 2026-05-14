@@ -17,7 +17,7 @@ export const ScreenWrapper = ({ children }: { children: React.ReactNode }) => (
   // AnimatePresence가 화면 전환 애니메이션을 이미 처리하므로 여기서는 정적 div 사용.
   // (이전엔 motion.div + opacity 0→1 fade를 했지만 외부 motion.div와 중첩되어
   // 애니메이션이 도중에 멈춰 화면이 반투명하게 보이는 버그가 있었음.)
-  <div className="flex-1 overflow-y-auto pb-24 px-6 pt-16">
+  <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24 px-6 pt-16">
     {children}
   </div>
 );

@@ -366,12 +366,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-surface font-sans text-onSurface w-full max-w-md mx-auto relative shadow-2xl shadow-primary/10 overflow-x-hidden">
-      <Header 
-        title={getHeaderTitle()} 
-        showBack={screen === 'book-detail' || screen === 'admin' || screen === 'search-results'} 
+      <Header
+        title={getHeaderTitle()}
+        showBack={screen === 'book-detail' || screen === 'admin' || screen === 'search-results'}
         onBack={handleBack}
-        setScreen={setScreen}
-        profileImage={profileImage}
       />
       
       <main className="flex flex-col min-h-screen">

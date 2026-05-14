@@ -1,6 +1,6 @@
 // 페이지 전반에서 재사용되는 레이아웃 컴포넌트들.
 // - ScreenWrapper: 본문 컨테이너 (스크롤 영역, 상하단 padding)
-// - Header: 상단 고정 헤더 (앱명/뒤로가기/프로필)
+// - Header: 상단 고정 헤더 (앱명/뒤로가기)
 // - BottomNav: 하단 탭 (홈/내 대출/프로필)
 // - SubPageHeader: 관리자 하위 페이지 제목 + 뒤로가기 라운드 버튼
 import React from 'react';
@@ -9,21 +9,15 @@ import {
   Home,
   Book as BookIcon,
   User,
+  Leaf,
 } from 'lucide-react';
 import type { Screen } from '../types';
-
-const BookLogoIcon = ({ size = 24, className = '' }: { size?: number; className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <path d="M2 4C2 3.45 2.45 3 3 3H10.5C11.33 3 12 3.67 12 4.5V20.5C12 20.5 9.5 19.5 7 19.5H3C2.45 19.5 2 19.05 2 18.5V4Z" opacity="0.85"/>
-    <path d="M22 4C22 3.45 21.55 3 21 3H13.5C12.67 3 12 3.67 12 4.5V20.5C12 20.5 14.5 19.5 17 19.5H21C21.55 19.5 22 19.05 22 18.5V4Z"/>
-  </svg>
-);
 
 export const ScreenWrapper = ({ children }: { children: React.ReactNode }) => (
   // AnimatePresence가 화면 전환 애니메이션을 이미 처리하므로 여기서는 정적 div 사용.
   // (이전엔 motion.div + opacity 0→1 fade를 했지만 외부 motion.div와 중첩되어
   // 애니메이션이 도중에 멈춰 화면이 반투명하게 보이는 버그가 있었음.)
-  <div className="flex-1 overflow-y-auto pb-24 px-6 pt-20">
+  <div className="flex-1 overflow-y-auto pb-24 px-6 pt-16">
     {children}
   </div>
 );
@@ -105,37 +99,24 @@ export const Header = ({
   title,
   showBack,
   onBack,
-  setScreen,
-  profileImage,
 }: {
   title: string;
   showBack?: boolean;
   onBack?: () => void;
-  setScreen: (s: Screen) => void;
-  profileImage: string;
 }) => (
   <header className="fixed top-0 left-0 w-full z-50 bg-[#fafaed]/80 backdrop-blur-xl border-b border-[#e2e3d6]/20">
-    <div className="flex justify-between items-center px-4 h-16 w-full max-w-md mx-auto">
-      <div className="flex items-center gap-3">
-        {showBack ? (
-          <button onClick={onBack} className="p-2 -ml-2 text-primary">
-            <ArrowLeft size={24} />
-          </button>
-        ) : (
-          <div className="p-2 -ml-2 text-primary">
-            <BookLogoIcon size={24} />
-          </div>
-        )}
-        <span className="text-xl font-black text-primary tracking-tight">{title}</span>
-      </div>
-      <button onClick={() => setScreen('profile')} className="w-9 h-9 rounded-full bg-[#eeefe2] overflow-hidden border border-[#c4c9b4]/30">
-        <img
-          alt="Profile"
-          src={profileImage}
-          className="w-full h-full object-cover"
-          referrerPolicy="no-referrer"
-        />
-      </button>
+    <div className="flex items-center px-5 h-12 w-full max-w-md mx-auto gap-2">
+      {showBack ? (
+        <button
+          onClick={onBack}
+          className="-ml-1 p-1.5 text-primary/70 rounded-lg active:bg-primary/10 transition-all"
+        >
+          <ArrowLeft size={20} />
+        </button>
+      ) : (
+        <Leaf size={14} className="text-primary/50 flex-shrink-0" />
+      )}
+      <span className="text-base font-black text-primary/80 tracking-tight">{title}</span>
     </div>
   </header>
 );

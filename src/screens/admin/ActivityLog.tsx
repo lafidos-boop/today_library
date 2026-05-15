@@ -46,7 +46,7 @@ export const ActivityLog = ({
             <button
               key={tab.id}
               onClick={() => setActivityFilter(tab.id as ActivityFilter)}
-              className={`px-3 py-1.5 text-[11px] font-black whitespace-nowrap rounded-t-md transition-all relative ${
+              className={`flex-1 py-1.5 text-[11px] font-black whitespace-nowrap rounded-t-md transition-all relative ${
                 activityFilter === tab.id
                   ? 'bg-white text-primary border-2 border-[#cdd0b8] border-b-white translate-y-[2px] z-10 shadow-sm'
                   : 'bg-[#eceedd] text-onSurfaceVariant/60 hover:bg-[#e2e3d6]'
@@ -55,7 +55,6 @@ export const ActivityLog = ({
               {tab.label}
             </button>
           ))}
-          <div className="flex-1" />
         </div>
       </div>
 

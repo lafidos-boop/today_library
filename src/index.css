@@ -21,6 +21,10 @@
   h1, h2, h3, h4 {
     @apply font-headline;
   }
+  /* iOS Safari auto-zoom prevention: triggered when focused input font-size < 16px */
+  input, select, textarea {
+    font-size: 16px;
+  }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

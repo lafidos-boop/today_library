@@ -1,0 +1,17 @@
+{
+  "name": "오늘책방대출",
+  "short_name": "오늘책방대출",
+  "description": "오늘책방 도서 대출 서비스",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafaed",
+  "theme_color": "#476500",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

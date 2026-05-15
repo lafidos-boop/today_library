@@ -182,30 +182,29 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
             </div>
           </div>
 
-          {/* 서가/행/열 */}
-          <div>
-            <label className="text-xs font-bold text-onSurfaceVariant px-1 block mb-2">서가 (책장)</label>
-            <select
-              value={shelf}
-              onChange={(e) => setShelf(e.target.value)}
-              className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium font-mono focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
-            >
-              <option value="">서가 선택</option>
-              {SHELF_OPTIONS[room].map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+          {/* 서가/행/열 — 한 줄 3분할 */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs font-bold text-onSurfaceVariant px-1 block mb-2">서가</label>
+              <select
+                value={shelf}
+                onChange={(e) => setShelf(e.target.value)}
+                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-3 text-sm font-medium font-mono focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+              >
+                <option value="">선택</option>
+                {SHELF_OPTIONS[room].map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="text-xs font-bold text-onSurfaceVariant px-1 block mb-2">행</label>
               <select
                 value={row}
                 onChange={(e) => setRow(e.target.value)}
-                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
               >
-                <option value="">행 선택</option>
+                <option value="">선택</option>
                 {ROW_OPTIONS[room].map((n) => (
                   <option key={n} value={String(n)}>{n}행</option>
                 ))}
@@ -216,9 +215,9 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
               <select
                 value={col}
                 onChange={(e) => setCol(e.target.value)}
-                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
               >
-                <option value="">열 선택</option>
+                <option value="">선택</option>
                 {COL_OPTIONS[room].map((n) => (
                   <option key={n} value={String(n)}>{n}열</option>
                 ))}

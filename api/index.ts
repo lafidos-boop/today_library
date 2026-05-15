@@ -467,15 +467,16 @@ app.post('/api/books/add', async (req, res) => {
     };
 
     // 서가(알파), 행(숫자), 열(숫자) 순으로 정렬 삽입.
-    // 시트가 부분적으로 뒤섞여 있어도 올바른 위치에 삽입:
-    //   - maxShelf/Row/Col 로 "지금까지 본 최대 키"를 추적
-    //   - 역순(out-of-order)으로 튀어나온 행은 무시
-    //   - in-order 행 중 새 도서보다 처음으로 큰 행 앞에 삽입 (break)
+    // "같은 위치(A,3,1)의 마지막 도서 바로 아래"에 삽입:
+    //   - maxShelf/Row/Col 로 역순(out-of-order) 행을 무시
+    //   - in-order 행 중 새 도서 위치 이하인 마지막 행을 추적(insertAfterIdx)
+    //   - 새 도서보다 큰 행이 나타나면 break → insertAfterIdx + 1 위치에 삽입
     const newShelf = String(shelf || '');
     const newRowNum = parseFloat(String(row || '0')) || 0;
     const newColNum = parseFloat(String(col || '0')) || 0;
 
-    let insertIdx = rows.length; // 기본: 맨 뒤에 append
+    let insertAfterIdx = -1; // -1이면 맨 앞에 삽입
+    let foundGreater = false;
     let maxShelf = '', maxRowNum = 0, maxColNum = 0;
 
     for (let i = 0; i < rows.length; i++) {
@@ -486,34 +487,41 @@ app.post('/api/books/add', async (req, res) => {
       const rRowNum = parseFloat(String(r['행'] || '0')) || 0;
       const rColNum = parseFloat(String(r['열'] || '0')) || 0;
 
-      // 이 행이 지금까지 본 최대 키 이상인지(순서대로 진행 중인지) 확인
+      // 역순 행 무시
       const inOrder =
         rShelf > maxShelf ||
         (rShelf === maxShelf && rRowNum > maxRowNum) ||
         (rShelf === maxShelf && rRowNum === maxRowNum && rColNum >= maxColNum);
 
-      if (!inOrder) continue; // 역순 행(B 뒤에 나타난 A 등)은 무시
+      if (!inOrder) continue;
 
       maxShelf = rShelf;
       maxRowNum = rRowNum;
       maxColNum = rColNum;
 
-      // 새 도서가 이 in-order 행보다 앞에 와야 하면 → 여기에 삽입
-      const newBeforeThis =
-        newShelf < rShelf ||
-        (newShelf === rShelf && newRowNum < rRowNum) ||
-        (newShelf === rShelf && newRowNum === rRowNum && newColNum < rColNum);
+      // 이 행이 새 도서 위치 이하(같은 그룹 포함)이면 → 삽입 후보로 갱신
+      const existingLessOrEqual =
+        rShelf < newShelf ||
+        (rShelf === newShelf && rRowNum < newRowNum) ||
+        (rShelf === newShelf && rRowNum === newRowNum && rColNum <= newColNum);
 
-      if (newBeforeThis) {
-        insertIdx = i;
+      if (existingLessOrEqual) {
+        insertAfterIdx = i; // 같은 위치의 마지막 행을 계속 갱신
+      } else {
+        foundGreater = true; // 새 도서보다 큰 행 발견 → 여기서 중단
         break;
       }
     }
 
-    if (insertIdx >= rows.length) {
+    if (!foundGreater) {
+      // 새 도서보다 큰 행이 없음 → 맨 끝에 추가
       await sheetsDb.append(room, newBook);
+    } else if (insertAfterIdx === -1) {
+      // 모든 행이 새 도서보다 큼 → 맨 앞(0번)에 삽입
+      await sheetsDb.insertAt(room, newBook, 0);
     } else {
-      await sheetsDb.insertAt(room, newBook, insertIdx);
+      // 마지막 같은-위치 행 바로 다음에 삽입
+      await sheetsDb.insertAt(room, newBook, insertAfterIdx + 1);
     }
 
     await logActivity({ type: 'book_add', user: '관리자', book: title, action: room });

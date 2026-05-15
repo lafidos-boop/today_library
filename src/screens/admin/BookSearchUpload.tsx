@@ -98,7 +98,15 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
       const data = await res.json();
       if (res.ok) {
         toastApi.success(`'${selectedBook.title}' 도서가 추가되었습니다. (${data.bookId})`);
-        onBack();
+        // 검색 화면으로 돌아가 연속 업로드 가능하게
+        setSelectedBook(null);
+        setQuery('');
+        setResults([]);
+        setHasSearched(false);
+        setShelf('');
+        setRow('');
+        setCol('');
+        setGenre('');
       } else {
         toastApi.error(data.error || '저장 중 오류가 발생했습니다.');
       }

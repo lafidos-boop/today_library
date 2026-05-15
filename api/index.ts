@@ -466,30 +466,50 @@ app.post('/api/books/add', async (req, res) => {
       '표지': cover || '',
     };
 
-    // 서가(알파벳) → 행(숫자) → 열(숫자) 순으로 정렬 삽입.
-    // "새 도서보다 앞에 와야 할 마지막 행 인덱스" 를 찾아 그 뒤에 삽입.
-    // break 방식(첫 번째 더 큰 항목에서 중단)은 시트 순서가 뒤섞여 있을 때 오삽입되므로 사용하지 않음.
+    // 서가(알파), 행(숫자), 열(숫자) 순으로 정렬 삽입.
+    // 시트가 부분적으로 뒤섞여 있어도 올바른 위치에 삽입:
+    //   - maxShelf/Row/Col 로 "지금까지 본 최대 키"를 추적
+    //   - 역순(out-of-order)으로 튀어나온 행은 무시
+    //   - in-order 행 중 새 도서보다 처음으로 큰 행 앞에 삽입 (break)
     const newShelf = String(shelf || '');
     const newRowNum = parseFloat(String(row || '0')) || 0;
     const newColNum = parseFloat(String(col || '0')) || 0;
 
-    let insertAfterIdx = -1; // -1: 모든 항목보다 앞에 삽입
+    let insertIdx = rows.length; // 기본: 맨 뒤에 append
+    let maxShelf = '', maxRowNum = 0, maxColNum = 0;
+
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
       const rShelf = String(r['서가'] || '');
-      if (!rShelf) continue; // 빈 행(서가 없음) 건너뜀 — 빈 행을 'A보다 앞'으로 잘못 인식하는 버그 방지
+      if (!rShelf) continue; // 빈 행 건너뜀
+
       const rRowNum = parseFloat(String(r['행'] || '0')) || 0;
       const rColNum = parseFloat(String(r['열'] || '0')) || 0;
-      const shelfCmp = newShelf.localeCompare(rShelf, 'ko');
-      const rowCmp = newRowNum - rRowNum;
-      const colCmp = newColNum - rColNum;
-      // 기존 행이 새 도서보다 앞에 와야 하는 경우 → 계속 추적
-      if (shelfCmp > 0 || (shelfCmp === 0 && rowCmp > 0) || (shelfCmp === 0 && rowCmp === 0 && colCmp > 0)) {
-        insertAfterIdx = i;
+
+      // 이 행이 지금까지 본 최대 키 이상인지(순서대로 진행 중인지) 확인
+      const inOrder =
+        rShelf > maxShelf ||
+        (rShelf === maxShelf && rRowNum > maxRowNum) ||
+        (rShelf === maxShelf && rRowNum === maxRowNum && rColNum >= maxColNum);
+
+      if (!inOrder) continue; // 역순 행(B 뒤에 나타난 A 등)은 무시
+
+      maxShelf = rShelf;
+      maxRowNum = rRowNum;
+      maxColNum = rColNum;
+
+      // 새 도서가 이 in-order 행보다 앞에 와야 하면 → 여기에 삽입
+      const newBeforeThis =
+        newShelf < rShelf ||
+        (newShelf === rShelf && newRowNum < rRowNum) ||
+        (newShelf === rShelf && newRowNum === rRowNum && newColNum < rColNum);
+
+      if (newBeforeThis) {
+        insertIdx = i;
+        break;
       }
     }
 
-    const insertIdx = insertAfterIdx + 1;
     if (insertIdx >= rows.length) {
       await sheetsDb.append(room, newBook);
     } else {

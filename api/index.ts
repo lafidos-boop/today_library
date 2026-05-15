@@ -496,7 +496,7 @@ app.post('/api/books/add', async (req, res) => {
       await sheetsDb.insertAt(room, newBook, insertIdx);
     }
 
-    await logActivity({ type: 'book_add', user: '관리자', book: title, action: '도서 추가' });
+    await logActivity({ type: 'book_add', user: '관리자', book: title, action: room });
 
     // 캐시 무효화 — 다음 /api/books 호출 시 구글 시트에서 재동기화
     lastSyncAt = 0;

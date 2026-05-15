@@ -77,8 +77,8 @@ export const ActivityLog = ({
                   <span className="text-[10px] text-onSurfaceVariant font-bold opacity-40">{item.time}</span>
                 </div>
                 <p className="text-sm font-medium text-onSurface leading-relaxed">
-                  <span className="text-primary font-black mx-1">"{item.book}"</span> 도서가
-                  <span className="font-black text-primary ml-1">추가</span>되었습니다.
+                  <span className="font-black text-primary">"{item.book}"</span> 도서가{' '}
+                  <span className="font-black text-onSurface">'{item.action}'</span>에 추가되었습니다.
                 </p>
               </div>
             ))
@@ -178,15 +178,24 @@ export const ActivityLog = ({
                   <span className="text-[10px] text-onSurfaceVariant font-bold opacity-40">{item.time}</span>
                 </div>
                 <p className="text-sm font-medium text-onSurface leading-relaxed">
-                  <span className="font-black text-lg">{item.user}</span> 님이
-                  <span className="text-primary font-black mx-1">"{item.book}"</span> 도서를
-                  <span
-                    className={`font-black ml-1 ${
-                      item.type === 'return' ? 'text-primary' : item.type === 'borrow' ? 'text-onSurface' : 'text-error'
-                    }`}
-                  >
-                    {item.action}
-                  </span>
+                  {item.type === 'book_add' ? (
+                    <>
+                      <span className="font-black text-primary">"{item.book}"</span> 도서가{' '}
+                      <span className="font-black text-onSurface">'{item.action}'</span>에 추가되었습니다.
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-black text-lg">{item.user}</span> 님이
+                      <span className="text-primary font-black mx-1">"{item.book}"</span> 도서를
+                      <span
+                        className={`font-black ml-1 ${
+                          item.type === 'return' ? 'text-primary' : item.type === 'borrow' ? 'text-onSurface' : 'text-error'
+                        }`}
+                      >
+                        {item.action}
+                      </span>
+                    </>
+                  )}
                   하였습니다.
                 </p>
               </div>

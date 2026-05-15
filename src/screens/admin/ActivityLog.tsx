@@ -32,28 +32,31 @@ export const ActivityLog = ({
     <ScreenWrapper>
       <SubPageHeader icon={ClipboardList} title="전체 활동 기록" onBack={onBack} />
 
-      {/* 필터 탭 */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
-        {[
-          { id: 'all', label: '전체' },
-          { id: 'borrow', label: '대출' },
-          { id: 'return', label: '반납' },
-          { id: 'overdue', label: '연체' },
-          { id: 'signup', label: '회원' },
-          { id: 'book_add', label: '도서' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActivityFilter(tab.id as ActivityFilter)}
-            className={`px-5 py-2 rounded-full text-xs font-black transition-all whitespace-nowrap ${
-              activityFilter === tab.id
-                ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
-                : 'bg-white text-onSurfaceVariant border border-[#e2e3d6]/50'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* 필터 탭 — 엑셀 시트 스타일 */}
+      <div className="relative mb-6">
+        <div className="flex gap-0.5 border-b-2 border-[#cdd0b8]">
+          {[
+            { id: 'all', label: '전체' },
+            { id: 'borrow', label: '대출' },
+            { id: 'return', label: '반납' },
+            { id: 'overdue', label: '연체' },
+            { id: 'signup', label: '회원' },
+            { id: 'book_add', label: '도서' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActivityFilter(tab.id as ActivityFilter)}
+              className={`px-3 py-1.5 text-[11px] font-black whitespace-nowrap rounded-t-md transition-all relative ${
+                activityFilter === tab.id
+                  ? 'bg-white text-primary border-2 border-[#cdd0b8] border-b-white translate-y-[2px] z-10 shadow-sm'
+                  : 'bg-[#eceedd] text-onSurfaceVariant/60 hover:bg-[#e2e3d6]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+          <div className="flex-1" />
+        </div>
       </div>
 
       {/* '도서' 탭: 업로드된 도서 목록 */}

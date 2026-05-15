@@ -91,6 +91,30 @@ export const AdminDashboard = ({
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (subView !== 'activities') return;
+    fetch('/api/activities')
+      .then((r) => r.json())
+      .then((actData) => {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        setRecentActivities(
+          actData
+            .filter((a: any) => new Date(a.time) >= oneWeekAgo)
+            .map((a: any) => ({
+              ...a,
+              time: new Date(a.time).toLocaleDateString('ko-KR', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+            })),
+        );
+      })
+      .catch(() => {});
+  }, [subView]);
+
   // 연체자 리스트는 실 대출(allLoans)에서 isOverdue=true인 항목을 추출 (백엔드에서 동적 계산됨)
   const overdueMembers = allLoans
     .filter((l: any) => l.isOverdue)

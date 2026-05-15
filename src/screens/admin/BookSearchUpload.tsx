@@ -1,5 +1,5 @@
 // 도서 업로드 — 제목/저자/ISBN 검색 → 카카오 Books API로 도서 정보 조회 → 서가 배치 입력 → 구글 시트에 저장.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Search, BookOpen, MapPin, Check, ChevronRight, Camera } from 'lucide-react';
 import { ScreenWrapper, SubPageHeader } from '../../components/Layout';
@@ -15,6 +15,18 @@ type BookResult = {
 };
 
 const ROOMS = ['새벽도서관', '별빛책방'];
+const SHELF_OPTIONS: Record<string, string[]> = {
+  '새벽도서관': ['A', 'B'],
+  '별빛책방': ['D', 'E', 'F', 'G'],
+};
+const ROW_OPTIONS: Record<string, number[]> = {
+  '새벽도서관': [1, 2, 3, 4, 5, 6, 7],
+  '별빛책방': [1, 2, 3],
+};
+const COL_OPTIONS: Record<string, number[]> = {
+  '새벽도서관': [1, 2, 3, 4, 5],
+  '별빛책방': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+};
 
 export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
   const [query, setQuery] = useState('');
@@ -30,6 +42,12 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
   const [col, setCol] = useState('');
   const [genre, setGenre] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setShelf('');
+    setRow('');
+    setCol('');
+  }, [room]);
 
   const searchKakao = async () => {
     const apiKey = import.meta.env.VITE_KAKAO_API_KEY;
@@ -73,8 +91,8 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
   };
 
   const handleSave = async () => {
-    if (!selectedBook || !shelf.trim()) {
-      toastApi.error('서가(책장)를 입력해 주세요.');
+    if (!selectedBook || !shelf || !row || !col) {
+      toastApi.error('서가, 행, 열을 모두 선택해 주세요.');
       return;
     }
     setIsSaving(true);
@@ -167,35 +185,44 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
           {/* 서가/행/열 */}
           <div>
             <label className="text-xs font-bold text-onSurfaceVariant px-1 block mb-2">서가 (책장)</label>
-            <input
-              type="text"
+            <select
               value={shelf}
               onChange={(e) => setShelf(e.target.value)}
-              placeholder="예: A, B, 1번 책장 …"
-              className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium font-mono focus:ring-2 focus:ring-primary/20 transition-all"
-            />
+              className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium font-mono focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+            >
+              <option value="">서가 선택</option>
+              {SHELF_OPTIONS[room].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold text-onSurfaceVariant px-1 block mb-2">행</label>
-              <input
-                type="text"
+              <select
                 value={row}
                 onChange={(e) => setRow(e.target.value)}
-                placeholder="예: 1, 2 …"
-                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all"
-              />
+                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+              >
+                <option value="">행 선택</option>
+                {ROW_OPTIONS[room].map((n) => (
+                  <option key={n} value={String(n)}>{n}행</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="text-xs font-bold text-onSurfaceVariant px-1 block mb-2">열</label>
-              <input
-                type="text"
+              <select
                 value={col}
                 onChange={(e) => setCol(e.target.value)}
-                placeholder="예: 3, 4 …"
-                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all"
-              />
+                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+              >
+                <option value="">열 선택</option>
+                {COL_OPTIONS[room].map((n) => (
+                  <option key={n} value={String(n)}>{n}열</option>
+                ))}
+              </select>
             </div>
           </div>
 

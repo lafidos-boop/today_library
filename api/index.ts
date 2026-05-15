@@ -177,6 +177,31 @@ const sheetsDb = {
     const all = await this.listAll(tab);
     return all.find((o) => String(o.id) === String(id)) || null;
   },
+
+  // dataRowIndex: 데이터 행 기준 0-based (0 = 헤더 바로 다음)
+  async insertAt(tab: string, obj: any, dataRowIndex: number): Promise<void> {
+    const headers = await getHeaders(tab);
+    const row = objectToRow(obj, headers);
+    const gid = await getSheetGid(tab);
+    const sheetRowIndex = dataRowIndex + 1; // 0-based 시트 인덱스 (헤더=0)
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SHEET_ID,
+      requestBody: {
+        requests: [{
+          insertDimension: {
+            range: { sheetId: gid, dimension: 'ROWS', startIndex: sheetRowIndex, endIndex: sheetRowIndex + 1 },
+            inheritFromBefore: false,
+          },
+        }],
+      },
+    });
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `${tab}!A${sheetRowIndex + 1}`,
+      valueInputOption: 'RAW',
+      requestBody: { values: [row] },
+    });
+  },
 };
 
 // =============================================================================
@@ -427,7 +452,8 @@ app.post('/api/books/add', async (req, res) => {
     }
     const newCode = `${prefix}-${String(maxCodeNum + 1).padStart(5, '0')}`;
 
-    await sheetsDb.append(room, {
+    const newBook = {
+      '위치': room,
       '도서코드': newCode,
       '제목': title,
       '저자': author || '',
@@ -438,7 +464,38 @@ app.post('/api/books/add', async (req, res) => {
       '열': col || '',
       'ISBN': isbn || '',
       '표지': cover || '',
-    });
+    };
+
+    // 서가(알파벳) → 행(숫자) → 열(숫자) 순으로 정렬 삽입.
+    // "새 도서보다 앞에 와야 할 마지막 행 인덱스" 를 찾아 그 뒤에 삽입.
+    // break 방식(첫 번째 더 큰 항목에서 중단)은 시트 순서가 뒤섞여 있을 때 오삽입되므로 사용하지 않음.
+    const newShelf = String(shelf || '');
+    const newRowNum = parseFloat(String(row || '0')) || 0;
+    const newColNum = parseFloat(String(col || '0')) || 0;
+
+    let insertAfterIdx = -1; // -1: 모든 항목보다 앞에 삽입
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const rShelf = String(r['서가'] || '');
+      const rRowNum = parseFloat(String(r['행'] || '0')) || 0;
+      const rColNum = parseFloat(String(r['열'] || '0')) || 0;
+      const shelfCmp = newShelf.localeCompare(rShelf, 'ko');
+      const rowCmp = newRowNum - rRowNum;
+      const colCmp = newColNum - rColNum;
+      // 기존 행이 새 도서보다 앞에 와야 하는 경우 → 계속 추적
+      if (shelfCmp > 0 || (shelfCmp === 0 && rowCmp > 0) || (shelfCmp === 0 && rowCmp === 0 && colCmp > 0)) {
+        insertAfterIdx = i;
+      }
+    }
+
+    const insertIdx = insertAfterIdx + 1;
+    if (insertIdx >= rows.length) {
+      await sheetsDb.append(room, newBook);
+    } else {
+      await sheetsDb.insertAt(room, newBook, insertIdx);
+    }
+
+    await logActivity({ type: 'book_add', user: '관리자', book: title, action: '도서 추가' });
 
     // 캐시 무효화 — 다음 /api/books 호출 시 구글 시트에서 재동기화
     lastSyncAt = 0;

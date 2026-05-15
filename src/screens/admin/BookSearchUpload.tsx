@@ -172,7 +172,7 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
               value={shelf}
               onChange={(e) => setShelf(e.target.value)}
               placeholder="예: A, B, 1번 책장 …"
-              className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium font-mono focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
 
@@ -206,7 +206,7 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
               value={genre}
               onChange={(e) => setGenre(e.target.value)}
               placeholder="예: 소설, 자연과학, 에세이 …"
-              className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium font-korean focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
         </div>

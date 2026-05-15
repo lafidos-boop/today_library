@@ -477,6 +477,7 @@ app.post('/api/books/add', async (req, res) => {
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
       const rShelf = String(r['서가'] || '');
+      if (!rShelf) continue; // 빈 행(서가 없음) 건너뜀 — 빈 행을 'A보다 앞'으로 잘못 인식하는 버그 방지
       const rRowNum = parseFloat(String(r['행'] || '0')) || 0;
       const rColNum = parseFloat(String(r['열'] || '0')) || 0;
       const shelfCmp = newShelf.localeCompare(rShelf, 'ko');

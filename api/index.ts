@@ -751,16 +751,31 @@ app.get('/api/activities', async (req, res) => {
   }
 });
 
-// 사용자별 대출 기록 (activities에서 borrow/return 필터링)
+// 사용자별 대출 기록 — 대출 항목마다 반납일 매칭해서 반환
 app.get('/api/history', async (req, res) => {
   try {
     const name = String(req.query.name || '').trim();
     if (!name) return res.json([]);
     const all = await sheetsDb.listAll('activities');
-    const userHistory = all
-      .filter((a) => a.user === name && (a.type === 'borrow' || a.type === 'return'))
-      .sort((a, b) => (b.time || '').localeCompare(a.time || ''));
-    res.json(userHistory);
+    const userActs = all
+      .filter((a) => a.user === name)
+      .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+    const result: any[] = [];
+    for (const act of userActs) {
+      if (act.type !== 'borrow') continue;
+      // 같은 책의 다음 반납 기록 찾기
+      const ret = userActs.find(
+        (r) => r.type === 'return' && r.book === act.book && r.time > act.time
+      );
+      result.push({
+        book: act.book,
+        borrowTime: act.time,
+        returnTime: ret?.time || null,
+      });
+    }
+    result.sort((a, b) => (b.borrowTime || '').localeCompare(a.borrowTime || ''));
+    res.json(result);
   } catch (error) {
     console.error('GET /api/history error:', error);
     res.json([]);

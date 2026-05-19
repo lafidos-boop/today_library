@@ -33,8 +33,8 @@ export const MyLoansScreen = ({
       .finally(() => setHistoryLoading(false));
   }, [userName]);
 
-  const borrowHistory = history.filter((h) => h.type === 'borrow');
-  const returnCount = borrowHistory.length;
+  const borrowHistory = history;
+  const returnCount = history.length;
 
   const formatHistoryTime = (iso: string) => {
     if (!iso) return '';
@@ -212,10 +212,11 @@ export const MyLoansScreen = ({
                   <p className="text-center text-sm text-onSurfaceVariant/50 py-10">대출 기록이 없습니다.</p>
                 ) : (
                   borrowHistory.map((h, i) => (
-                    <div key={i} className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between border border-[#e2e3d6]/30">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-black text-sm text-onSurface truncate">{h.book}</p>
-                        <p className="text-[11px] text-onSurfaceVariant/60 mt-0.5">{formatHistoryTime(h.time)}</p>
+                    <div key={i} className="bg-white rounded-2xl px-4 py-3 border border-[#e2e3d6]/30">
+                      <p className="font-black text-sm text-onSurface truncate mb-1.5">{h.book}</p>
+                      <div className="flex gap-4 text-[11px] text-onSurfaceVariant/60">
+                        <span>대출 {formatHistoryTime(h.borrowTime)}</span>
+                        <span>반납 {h.returnTime ? formatHistoryTime(h.returnTime) : '대출 중'}</span>
                       </div>
                     </div>
                   ))

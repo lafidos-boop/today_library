@@ -33,8 +33,8 @@ export const MyLoansScreen = ({
       .finally(() => setHistoryLoading(false));
   }, [userName]);
 
-  const borrowHistory = history;
-  const returnCount = history.length;
+  const borrowHistory = history.filter((h) => h.returnTime);
+  const returnCount = borrowHistory.length;
 
   const formatHistoryTime = (iso: string) => {
     if (!iso) return '';

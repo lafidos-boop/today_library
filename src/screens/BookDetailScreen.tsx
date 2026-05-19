@@ -1,5 +1,5 @@
 // 도서 상세 화면 — 검색에서 진입 시 "대출하기", 내 대출에서 진입 시 "반납/연장" 버튼.
-import React from 'react';
+import React, { useState } from 'react';
 import { Map as MapIcon, RotateCcw, RefreshCw } from 'lucide-react';
 import { ScreenWrapper } from '../components/Layout';
 import type { Book, LoanWithBook } from '../types';
@@ -11,6 +11,7 @@ export const BookDetailScreen = ({
   currentLoan,
   onReturn,
   onExtend,
+  userName,
 }: {
   book: Book;
   onBack: () => void;
@@ -18,8 +19,39 @@ export const BookDetailScreen = ({
   currentLoan?: LoanWithBook;
   onReturn?: (loanId: number, bookTitle: string) => void;
   onExtend?: (loan: LoanWithBook) => void;
+  userName?: string;
 }) => {
   const isMyLoan = !!currentLoan;
+  const [showLoanConfirm, setShowLoanConfirm] = useState(false);
+  const [loanCopied, setLoanCopied] = useState(false);
+
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })
+      .replace('. ', '.').replace('.', '').replace(' ', '.');
+
+  const handleLoanConfirm = async () => {
+    const borrowDate = formatDate(new Date());
+    const returnDate = formatDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000));
+    const text = `[대출합니다]\n1. 책제목: "${book.title}"\n2. 대출자이름: "${userName || ''}"\n3. 대출기간: "${borrowDate}" ~ "${returnDate}"`;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setLoanCopied(true);
+    setTimeout(() => {
+      setLoanCopied(false);
+      setShowLoanConfirm(false);
+      onLoan(book);
+    }, 1400);
+  };
   return (
     <ScreenWrapper>
       <div className="mb-4">
@@ -123,17 +155,42 @@ export const BookDetailScreen = ({
           </div>
         </>
       ) : (
-        <button
-          onClick={() => onLoan(book)}
-          disabled={book.status === 'borrowed'}
-          className={`w-full py-4 rounded-xl font-black text-base shadow-xl transition-all active:scale-95 ${
-            book.status === 'borrowed'
-              ? 'bg-onSurfaceVariant/10 text-onSurfaceVariant/40 cursor-not-allowed shadow-none'
-              : 'bg-primary text-white shadow-primary/20'
-          }`}
-        >
-          {book.status === 'borrowed' ? '대출 중' : '대출하기'}
-        </button>
+        <>
+          {showLoanConfirm && (
+            <div className="bg-primary/5 border-2 border-primary/20 rounded-2xl p-5 mb-4">
+              <p className="text-sm font-bold text-onSurface leading-relaxed mb-4">
+                <span className="font-black">"{book.title}"</span>을 대출하려고 합니다.
+              </p>
+              <button
+                onClick={handleLoanConfirm}
+                disabled={loanCopied}
+                className="w-full py-3.5 rounded-xl font-black text-sm shadow-lg transition-all active:scale-95 bg-[#FEE500] text-black shadow-yellow-200/50 flex items-center justify-center gap-2 disabled:opacity-80"
+              >
+                {loanCopied ? (
+                  '카카오톡 메세지가 복사되었습니다.'
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="black">
+                      <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.527 1.523 4.74 3.813 6.063l-.938 3.5 4.063-2.688A11.4 11.4 0 0 0 12 17.5c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
+                    </svg>
+                    확인 및 카카오톡 메세지 복사
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+          <button
+            onClick={() => book.status !== 'borrowed' && setShowLoanConfirm(true)}
+            disabled={book.status === 'borrowed'}
+            className={`w-full py-4 rounded-xl font-black text-base shadow-xl transition-all active:scale-95 ${
+              book.status === 'borrowed'
+                ? 'bg-onSurfaceVariant/10 text-onSurfaceVariant/40 cursor-not-allowed shadow-none'
+                : 'bg-primary text-white shadow-primary/20'
+            }`}
+          >
+            {book.status === 'borrowed' ? '대출 중' : '대출하기'}
+          </button>
+        </>
       )}
     </ScreenWrapper>
   );

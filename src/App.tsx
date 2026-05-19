@@ -436,6 +436,7 @@ export default function App() {
                 }
                 onReturn={handleReturnFromDetail}
                 onExtend={handleExtendFromDetail}
+                userName={currentUser?.name}
               />
             </motion.div>
           )}

@@ -118,9 +118,6 @@ export const MyLoansScreen = ({
         });
       }
       await refreshLoans();
-      if (activeAction.type === 'extend') {
-        toastApi.success('대출 기간이 연장되었습니다.');
-      }
     } catch (error) {
       console.error('Action failed:', error);
       toastApi.error('처리 중 오류가 발생했습니다. 다시 시도해 주세요.');

@@ -1,7 +1,7 @@
 // 내 대출 화면 — 대출 중인 도서 목록, 반납/연장 액션.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, BookMarked, X } from 'lucide-react';
 import { ScreenWrapper } from '../components/Layout';
 import { toastApi } from '../toast';
 import type { Book, Loan, LoanWithBook } from '../types';
@@ -19,6 +19,28 @@ export const MyLoansScreen = ({
   refreshLoans: () => void;
   userName: string;
 }) => {
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  useEffect(() => {
+    if (!userName) return;
+    setHistoryLoading(true);
+    fetch(`/api/history?name=${encodeURIComponent(userName)}`)
+      .then((r) => r.json())
+      .then((data) => setHistory(Array.isArray(data) ? data : []))
+      .catch(() => setHistory([]))
+      .finally(() => setHistoryLoading(false));
+  }, [userName]);
+
+  const returnCount = history.filter((h) => h.type === 'return').length;
+
+  const formatHistoryTime = (iso: string) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  };
+
   const [activeAction, setActiveAction] = useState<{
     type: 'return' | 'extend';
     loanId: number;
@@ -144,11 +166,71 @@ export const MyLoansScreen = ({
           <span className="text-2xl font-black text-error">{loans.filter((l) => l.isOverdue).length}</span>
         </div>
         <div className="w-px h-8 bg-[#e2e3d6]/50" />
-        <div className="flex flex-col items-center">
-          <span className="text-[10px] font-black text-onSurfaceVariant/40 uppercase tracking-widest mb-1">다음에 읽을 책</span>
-          <span className="text-2xl font-black text-onSurfaceVariant/20">0</span>
-        </div>
+        <button
+          onClick={() => setShowHistory(true)}
+          className="flex flex-col items-center active:scale-95 transition-all"
+        >
+          <span className="text-[10px] font-black text-onSurfaceVariant/40 uppercase tracking-widest mb-1">내 대출 기록</span>
+          <span className="text-2xl font-black text-primary">
+            {historyLoading ? <span className="text-base">…</span> : returnCount}
+          </span>
+        </button>
       </div>
+
+      {/* 내 대출 기록 모달 */}
+      <AnimatePresence>
+        {showHistory && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center"
+            onClick={() => setShowHistory(false)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-surface w-full max-w-md rounded-t-3xl p-6 max-h-[75vh] flex flex-col"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <BookMarked size={20} className="text-primary" />
+                  <h2 className="text-lg font-black text-onSurface">내 대출 기록</h2>
+                </div>
+                <button onClick={() => setShowHistory(false)} className="p-1 text-onSurfaceVariant/50">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="overflow-y-auto flex-1 space-y-2 pr-1">
+                {historyLoading ? (
+                  <p className="text-center text-sm text-onSurfaceVariant/50 py-10">불러오는 중…</p>
+                ) : history.length === 0 ? (
+                  <p className="text-center text-sm text-onSurfaceVariant/50 py-10">대출 기록이 없습니다.</p>
+                ) : (
+                  history.map((h, i) => (
+                    <div key={i} className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between border border-[#e2e3d6]/30">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-sm text-onSurface truncate">{h.book}</p>
+                        <p className="text-[11px] text-onSurfaceVariant/60 mt-0.5">{formatHistoryTime(h.time)}</p>
+                      </div>
+                      <span className={`ml-3 text-[10px] font-black px-2 py-0.5 rounded-full flex-shrink-0 ${
+                        h.type === 'return'
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-onSurfaceVariant/10 text-onSurfaceVariant'
+                      }`}>
+                        {h.type === 'return' ? '반납' : '대출'}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 결과/확인 섹션 */}
       <AnimatePresence mode="wait">

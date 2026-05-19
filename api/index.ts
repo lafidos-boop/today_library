@@ -751,6 +751,22 @@ app.get('/api/activities', async (req, res) => {
   }
 });
 
+// 사용자별 대출 기록 (activities에서 borrow/return 필터링)
+app.get('/api/history', async (req, res) => {
+  try {
+    const name = String(req.query.name || '').trim();
+    if (!name) return res.json([]);
+    const all = await sheetsDb.listAll('activities');
+    const userHistory = all
+      .filter((a) => a.user === name && (a.type === 'borrow' || a.type === 'return'))
+      .sort((a, b) => (b.time || '').localeCompare(a.time || ''));
+    res.json(userHistory);
+  } catch (error) {
+    console.error('GET /api/history error:', error);
+    res.json([]);
+  }
+});
+
 // 로컬 개발에서만 listen, Vercel에서는 default export만 사용
 if (!process.env.VERCEL) {
   app.listen(PORT, '0.0.0.0', () => {

@@ -47,6 +47,8 @@ export const LoginScreen = ({
         return;
       }
 
+      localStorage.setItem('autologin_creds', JSON.stringify({ name, password }));
+
       if (type === 'admin') {
         onAdmin(user);
       } else {
@@ -65,15 +67,14 @@ export const LoginScreen = ({
       <div className="absolute top-[-10%] right-[-5%] w-72 h-72 rounded-full bg-[#add461]/10 blur-3xl" />
       <div className="absolute bottom-[-10%] left-[-5%] w-64 h-64 rounded-full bg-[#86fab0]/10 blur-3xl" />
 
-      <div className="flex flex-col items-center mb-10 text-center z-10">
-        <div className="relative mb-6">
-          <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-primary to-[#3a5c10] flex items-center justify-center shadow-2xl shadow-primary/40">
-            <Sprout size={42} className="text-white" strokeWidth={1.5} />
-          </div>
-          <div className="absolute inset-0 rounded-[28px] bg-primary/20 blur-2xl -z-10 scale-125" />
+      <div className="flex items-center gap-4 mb-10 z-10">
+        <div className="flex-shrink-0 w-[64px] h-[64px] rounded-[18px] bg-[#eef2e0] flex items-center justify-center shadow-sm">
+          <Sprout size={30} className="text-primary" strokeWidth={1.8} />
         </div>
-        <h1 className="text-5xl font-black text-primary tracking-tight leading-none mb-3">오늘책방</h1>
-        <p className="text-xs text-onSurfaceVariant/50 font-semibold tracking-[0.18em]">오늘의 지혜를 내일의 빛으로</p>
+        <div className="flex flex-col min-w-0">
+          <h1 className="text-[2rem] font-black text-primary tracking-tight leading-tight whitespace-nowrap">오늘책방</h1>
+          <p className="text-xs text-onSurfaceVariant/60 font-medium tracking-wide mt-0.5">오늘의 지혜를 내일의 빛으로</p>
+        </div>
       </div>
 
       <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-xl shadow-primary/5 z-10 border border-[#e2e3d6]/30">
@@ -87,11 +88,6 @@ export const LoginScreen = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="이름을 입력하세요"
-                // 한글 IME 기본 활성화 힌트:
-                //   - lang="ko" : 브라우저에 한국어 입력임을 알림
-                //   - autoFocus : 페이지 로드 시 즉시 포커스 → IME가 한국어로 전환되기 쉬움
-                //   - imeMode="active" : Firefox 등 일부 브라우저에서 한글 입력 활성화
-                //   ※ Chrome 등은 OS의 마지막 IME 상태를 따르므로 한글 강제 보장은 불가
                 lang="ko"
                 inputMode="text"
                 autoFocus

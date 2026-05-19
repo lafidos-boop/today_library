@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlertCircle, Sprout } from 'lucide-react';
 import { toastApi } from './toast';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Screen, Book, Loan } from './types';
@@ -22,13 +22,40 @@ import { AdminDashboard } from './screens/admin/AdminDashboard';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('login');
-  // 앱 실행 시 항상 로그인 화면부터 시작 (자동 로그인 비활성화).
-  // 이전엔 localStorage에서 currentUser를 복원해 새로고침 시 로그인 상태가 유지됐었음.
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isAutoLogging, setIsAutoLogging] = useState(true);
 
-  // 이전 세션에 남아있던 currentUser 캐시 정리 (보안: 비밀번호 평문 저장 이슈도 함께 제거)
-  React.useEffect(() => {
-    localStorage.removeItem('currentUser');
+  // 앱 시작 시 저장된 인증 정보로 자동 로그인 시도
+  useEffect(() => {
+    const tryAutoLogin = async () => {
+      // 이전 방식으로 저장된 캐시 정리
+      localStorage.removeItem('currentUser');
+
+      const stored = localStorage.getItem('autologin_creds');
+      if (!stored) { setIsAutoLogging(false); return; }
+
+      try {
+        const { name, password } = JSON.parse(stored);
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, password }),
+        });
+        if (res.ok) {
+          const user = await res.json();
+          setCurrentUser(user);
+          setScreen('home');
+        } else {
+          // 인증 실패 시 저장된 정보 삭제
+          localStorage.removeItem('autologin_creds');
+        }
+      } catch {
+        // 네트워크 오류 시 로그인 화면으로
+      } finally {
+        setIsAutoLogging(false);
+      }
+    };
+    tryAutoLogin();
   }, []);
 
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
@@ -120,42 +147,22 @@ export default function App() {
   };
 
   // === 위치(서가/행/열) 쿼리 파서 ===
-  // 지원하는 패턴:
-  //   "A"            → 서가 A
-  //   "서가 A"        → 서가 A
-  //   "A1"           → 서가 A, 1행
-  //   "A 1행"         → 서가 A, 1행
-  //   "A 1 1"        → 서가 A, 1행 1열
-  //   "A-1-1"        → 서가 A, 1행 1열
-  //   "A 1행 1열"     → 서가 A, 1행 1열
-  //   "A1행1열"       → 서가 A, 1행 1열
-  // 위치 쿼리가 아니면 null 반환 → 일반 검색(제목/저자/출판사/열람실)으로 처리
   const parseLocationQuery = (raw: string): { shelf: string; row: string | null; col: string | null } | null => {
     const t = raw.replace(/\s+/g, ' ').trim().toLowerCase();
     if (!t) return null;
     let m;
-    // 1) "서가 X" 또는 단일 글자 "X"
     m = t.match(/^(?:서가\s*)?([a-g])(?:\s*서가)?$/);
     if (m) return { shelf: m[1].toUpperCase(), row: null, col: null };
-    // 2) 한국어 명시: "X N행 M열", "X N행"
     m = t.match(/^(?:서가\s*)?([a-g])\s*(\d+)\s*행(?:\s*(\d+)\s*열)?$/);
     if (m) return { shelf: m[1].toUpperCase(), row: m[2], col: m[3] || null };
-    // 3) 구분자(-, _, 공백): "X-N-M", "X N M", "X-N", "X N"
     m = t.match(/^(?:서가\s*)?([a-g])\s*[-_\s]\s*(\d+)(?:\s*[-_\s]\s*(\d+))?$/);
     if (m) return { shelf: m[1].toUpperCase(), row: m[2], col: m[3] || null };
-    // 4) 구분자 없는 짧은 형태: "A1" → 서가 A, 1행 (한 자리 숫자만)
     m = t.match(/^([a-g])(\d)$/);
     if (m) return { shelf: m[1].toUpperCase(), row: m[2], col: null };
     return null;
   };
 
   // === 장르 쿼리 파서 ===
-  // 지원 패턴 (대소문자/공백 무시):
-  //   "장르, 사회비평"
-  //   "장르: 사회비평"
-  //   "장르 사회비평"
-  //   "genre: 에세이"
-  // 매칭은 부분 일치(substring) → "사회비평" 검색 시 "정치/사회비평", "사회비평/에세이"도 결과에 포함
   const parseGenreQuery = (raw: string): string | null => {
     const m = raw.trim().match(/^(?:장르|genre)\s*[,:]?\s*(.+)$/i);
     if (!m) return null;
@@ -173,7 +180,6 @@ export default function App() {
       const row = String(book.location.row).trim();
       const col = String(book.location.col).trim();
 
-      // 1) 위치 쿼리: 정확히 매칭 (다른 검색 미실행)
       if (loc) {
         if (shelf !== loc.shelf.toLowerCase()) return false;
         if (loc.row !== null && row !== loc.row) return false;
@@ -181,12 +187,10 @@ export default function App() {
         return true;
       }
 
-      // 2) 장르 쿼리: 장르 필드만 부분 매칭 (제목/저자 미실행)
       if (genreQuery) {
         return book.genre.toLowerCase().includes(genreQuery);
       }
 
-      // 3) 일반 텍스트 검색 (제목/저자/출판사/열람실/장르)
       const title = book.title.toLowerCase();
       const author = book.author.toLowerCase();
       const publisher = book.publisher.toLowerCase();
@@ -229,7 +233,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newLoan)
       });
-      
+
       if (res.ok) {
         await fetchBooks();
         await fetchLoans();
@@ -279,7 +283,6 @@ export default function App() {
     }
   };
 
-  // book-detail에서 직접 반납/연장 처리 (내 대출 화면에서 진입한 경우)
   const handleReturnFromDetail = async (loanId: number, bookTitle: string) => {
     if (!window.confirm(`'${bookTitle}'을(를) 반납하시겠어요?`)) return;
     try {
@@ -300,7 +303,6 @@ export default function App() {
   };
 
   const handleExtendFromDetail = async (loan: any) => {
-    // 7일 연장 — MyLoansScreen.handleExtendRequest와 동일한 날짜 계산
     const [m, d] = loan.returnDate.split('.').map(Number);
     let nm = m;
     let nd = d + 7;
@@ -339,17 +341,29 @@ export default function App() {
     }
   };
 
+  // 자동 로그인 확인 중 스플래시 화면
+  if (isAutoLogging) {
+    return (
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-5">
+        <div className="w-[72px] h-[72px] rounded-[20px] bg-[#eef2e0] flex items-center justify-center shadow-md">
+          <Sprout size={32} className="text-primary" strokeWidth={1.8} />
+        </div>
+        <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   if (screen === 'login') {
     return (
-      <LoginScreen 
+      <LoginScreen
         onLogin={(user) => {
           setCurrentUser(user);
           setScreen('home');
-        }} 
+        }}
         onAdmin={(user) => {
           setCurrentUser(user);
           setScreen('admin');
-        }} 
+        }}
         onSignup={() => setScreen('signup')}
       />
     );
@@ -357,7 +371,7 @@ export default function App() {
 
   if (screen === 'signup') {
     return (
-      <SignupScreen 
+      <SignupScreen
         onBack={() => setScreen('login')}
         setScreen={setScreen}
       />
@@ -372,7 +386,7 @@ export default function App() {
         exitLabel={screen === 'admin' ? '밖으로' : undefined}
         onBack={handleBack}
       />
-      
+
       <main className="flex flex-col min-h-screen">
         <AnimatePresence mode="wait">
           {screen === 'home' && (
@@ -422,14 +436,15 @@ export default function App() {
           )}
           {screen === 'profile' && (
             <motion.div key="profile" className="contents">
-              <ProfileScreen 
+              <ProfileScreen
                 currentUser={currentUser}
                 setCurrentUser={setCurrentUser}
                 onLogout={() => {
+                  localStorage.removeItem('autologin_creds');
                   setCurrentUser(null);
                   setScreen('login');
-                }} 
-                onAdmin={() => setScreen('admin')} 
+                }}
+                onAdmin={() => setScreen('admin')}
                 profileImage={profileImage}
                 setProfileImage={setProfileImage}
               />
@@ -437,8 +452,8 @@ export default function App() {
           )}
           {screen === 'admin' && currentUser?.level === '관리자' && (
             <motion.div key="admin" className="contents">
-              <AdminDashboard 
-                setScreen={setScreen} 
+              <AdminDashboard
+                setScreen={setScreen}
                 setBooks={(newBooks) => {
                   if (typeof newBooks === 'function') {
                     setBooks(prev => {
@@ -450,7 +465,7 @@ export default function App() {
                     setBooks(newBooks);
                     saveBooksToServer(newBooks);
                   }
-                }} 
+                }}
               />
             </motion.div>
           )}

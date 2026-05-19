@@ -313,6 +313,7 @@ async function fetchBooksFromGoogleSheet() {
           publisher: String(r['출판사'] || '출판사 미상').trim(),
           genre: String(r['장르'] || '일반').trim(),
           cover,
+          addedAt: String(r['등록일'] || '').trim() || undefined,
           location: {
             shelf,
             row: String(r['행'] || '-').trim(),
@@ -464,6 +465,7 @@ app.post('/api/books/add', async (req, res) => {
       '열': col || '',
       'ISBN': isbn || '',
       '표지': cover || '',
+      '등록일': new Date().toISOString().split('T')[0],
     };
 
     // 서가(알파), 행(숫자), 열(숫자) 순으로 정렬 삽입.

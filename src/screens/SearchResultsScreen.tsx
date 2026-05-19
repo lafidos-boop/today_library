@@ -21,8 +21,14 @@ export const SearchResultsScreen = ({
   return (
     <ScreenWrapper>
       <header className="mb-8 mt-2">
-        <h1 className="text-3xl font-black text-onSurface mb-1">검색 결과</h1>
-        <p className="text-onSurfaceVariant font-medium">"{query}"에 대한 검색 결과입니다.</p>
+        <h1 className="text-3xl font-black text-onSurface mb-1">
+          {query === '__NEW_BOOKS__' ? '새로 들어온 도서' : '검색 결과'}
+        </h1>
+        <p className="text-onSurfaceVariant font-medium">
+          {query === '__NEW_BOOKS__'
+            ? '최근 한 달 안에 새로 등록된 도서예요.'
+            : `"${query}"에 대한 검색 결과입니다.`}
+        </p>
       </header>
 
       <div className="relative mb-8 group">

@@ -19,6 +19,7 @@ export interface Book {
   genre: string;
   cover: string;
   isbn?: string;
+  addedAt?: string;
   location: {
     shelf: string;
     row: string;

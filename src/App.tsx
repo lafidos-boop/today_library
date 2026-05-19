@@ -170,6 +170,25 @@ export default function App() {
     return g.length > 0 ? g.toLowerCase() : null;
   };
 
+  const handleNewBooks = () => {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+    const parseDate = (s: string): Date | null => {
+      if (!s) return null;
+      const d = new Date(s.replace(/\./g, '-'));
+      return isNaN(d.getTime()) ? null : d;
+    };
+
+    const newBooks = books.filter(b => {
+      const d = parseDate(b.addedAt || '');
+      return d !== null && d >= oneMonthAgo;
+    });
+    setSearchQuery('__NEW_BOOKS__');
+    setSearchResults(newBooks);
+    setScreen('search-results');
+  };
+
   const handleSearch = (query: string) => {
     const term = query.toLowerCase().trim();
     const loc = parseLocationQuery(query);
@@ -391,7 +410,7 @@ export default function App() {
         <AnimatePresence mode="wait">
           {screen === 'home' && (
             <motion.div key="home" className="contents">
-              <HomeScreen userName={currentUser?.name || '독서가'} loans={loans} selectBook={(b) => navigateToBook(b, 'home')} onSearch={handleSearch} setScreen={setScreen} />
+              <HomeScreen userName={currentUser?.name || '독서가'} loans={loans} selectBook={(b) => navigateToBook(b, 'home')} onSearch={handleSearch} onNewBooks={handleNewBooks} setScreen={setScreen} />
             </motion.div>
           )}
           {screen === 'search-results' && (

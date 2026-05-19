@@ -1,7 +1,7 @@
 // 홈 화면 — 환영 인사, 대출 요약, 검색바, QR코드 버튼.
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Search, BookOpen, QrCode } from 'lucide-react';
+import { Search, BookOpen, QrCode, Sparkles } from 'lucide-react';
 import { ScreenWrapper } from '../components/Layout';
 import type { Screen, Book, LoanWithBook } from '../types';
 
@@ -10,12 +10,14 @@ export const HomeScreen = ({
   loans,
   selectBook,
   onSearch,
+  onNewBooks,
   setScreen,
 }: {
   userName: string;
   loans: LoanWithBook[];
   selectBook: (b: Book) => void;
   onSearch: (query: string) => void;
+  onNewBooks: () => void;
   setScreen: (s: Screen) => void;
 }) => {
   const [searchValue, setSearchValue] = useState('');
@@ -79,7 +81,7 @@ export const HomeScreen = ({
       </div>
 
       {/* 3. QR 코드로 검색 (미구현 — 추후 작업) */}
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex items-center gap-3 mb-4">
         <div className="flex-1 h-px bg-[#e2e3d6]" />
         <motion.button
           whileTap={{ scale: 0.95 }}
@@ -89,6 +91,18 @@ export const HomeScreen = ({
           <span>QR코드로 검색</span>
         </motion.button>
         <div className="flex-1 h-px bg-[#e2e3d6]" />
+      </div>
+
+      {/* 4. 새로 들어온 도서 */}
+      <div className="flex justify-center mb-8">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={onNewBooks}
+          className="flex items-center gap-2 text-primary text-sm font-bold py-2 px-4 rounded-full hover:bg-primary/5 transition-all"
+        >
+          <Sparkles size={14} />
+          <span>새로 들어온 도서를 확인해보세요.</span>
+        </motion.button>
       </div>
     </ScreenWrapper>
   );

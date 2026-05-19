@@ -118,9 +118,7 @@ export const MyLoansScreen = ({
         });
       }
       await refreshLoans();
-      if (activeAction.type === 'return') {
-        toastApi.returnSuccess({ bookTitle: activeAction.bookTitle, userName });
-      } else {
+      if (activeAction.type === 'extend') {
         toastApi.success('대출 기간이 연장되었습니다.');
       }
     } catch (error) {

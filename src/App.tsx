@@ -303,7 +303,6 @@ export default function App() {
       if (res.ok) {
         await fetchBooks();
         await fetchLoans();
-        toastApi.returnSuccess({ bookTitle, userName: currentUser?.name || '' });
         setScreen('my-loans');
         setSelectedBook(null);
       } else {

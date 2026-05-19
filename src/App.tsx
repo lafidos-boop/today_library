@@ -324,10 +324,10 @@ export default function App() {
   const handleExtendFromDetail = async (loan: any) => {
     const [m, d] = loan.returnDate.split('.').map(Number);
     let nm = m;
-    let nd = d + 7;
+    let nd = d + 14;
     if (nd > 30) { nm += 1; nd -= 30; }
     const newDate = `${String(nm).padStart(2, '0')}.${String(nd).padStart(2, '0')}`;
-    const newDDay = (loan.dDay || 0) - 7;
+    const newDDay = (loan.dDay || 0) - 14;
 
     if (!window.confirm(`'${loan.book.title}'의 대출 기간을 ${newDate}까지 연장할까요?`)) return;
     try {

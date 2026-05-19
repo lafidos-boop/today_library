@@ -40,10 +40,10 @@ export const MyLoansScreen = ({
   };
 
   const handleExtendRequest = (loan: any) => {
-    // MM.DD format
+    // MM.DD format — 2주(14일) 연장
     const [m, d] = loan.returnDate.split('.').map(Number);
     let nm = m;
-    let nd = d + 7;
+    let nd = d + 14;
     if (nd > 30) {
       nm += 1;
       nd -= 30;
@@ -57,7 +57,7 @@ export const MyLoansScreen = ({
       bookTitle: loan.book.title,
       borrowDate: loan.borrowDate,
       newDate,
-      newDDay: (loan.dDay || 0) - 7,
+      newDDay: (loan.dDay || 0) - 14,
     });
   };
 

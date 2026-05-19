@@ -24,11 +24,12 @@ export const MyLoansScreen = ({
     loanId: number;
     bookId: string;
     bookTitle: string;
+    room?: string;
     borrowDate?: string;
     newDate?: string;
     newDDay?: number;
   } | null>(null);
-  const [extendCopied, setExtendCopied] = useState(false);
+  const [actionCopied, setActionCopied] = useState(false);
 
   const handleReturnRequest = (loan: any) => {
     setActiveAction({
@@ -36,6 +37,7 @@ export const MyLoansScreen = ({
       loanId: loan.id,
       bookId: loan.bookId,
       bookTitle: loan.book.title,
+      room: loan.book.location?.room || '',
     });
   };
 
@@ -61,9 +63,7 @@ export const MyLoansScreen = ({
     });
   };
 
-  const handleExtendWithCopy = async () => {
-    if (!activeAction) return;
-    const text = `[연장합니다]\n1. 책제목: ${activeAction.bookTitle}\n2. 연장자이름: ${userName}\n3. 대출기간: ${activeAction.borrowDate} ~ ${activeAction.newDate}`;
+  const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -76,9 +76,27 @@ export const MyLoansScreen = ({
       document.execCommand('copy');
       document.body.removeChild(ta);
     }
-    setExtendCopied(true);
+  };
+
+  const handleReturnWithCopy = async () => {
+    if (!activeAction) return;
+    const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const text = `[반납합니다] "${activeAction.room}"\n1. 책제목: "${activeAction.bookTitle}"\n2. 대출자이름: "${userName}"\n3. 반납날짜: "${today}"`;
+    await copyToClipboard(text);
+    setActionCopied(true);
     setTimeout(() => {
-      setExtendCopied(false);
+      setActionCopied(false);
+      handleActionConfirm();
+    }, 1400);
+  };
+
+  const handleExtendWithCopy = async () => {
+    if (!activeAction) return;
+    const text = `[연장합니다]\n1. 책제목: ${activeAction.bookTitle}\n2. 연장자이름: ${userName}\n3. 대출기간: ${activeAction.borrowDate} ~ ${activeAction.newDate}`;
+    await copyToClipboard(text);
+    setActionCopied(true);
+    setTimeout(() => {
+      setActionCopied(false);
       handleActionConfirm();
     }, 1400);
   };
@@ -168,26 +186,36 @@ export const MyLoansScreen = ({
               {activeAction.type === 'extend' ? (
                 <button
                   onClick={handleExtendWithCopy}
-                  disabled={extendCopied}
+                  disabled={actionCopied}
                   className="w-full py-3.5 rounded-xl font-black text-sm shadow-lg transition-all active:scale-95 bg-[#FEE500] text-black shadow-yellow-200/50 flex items-center justify-center gap-2 disabled:opacity-80"
                 >
-                  {extendCopied ? (
+                  {actionCopied ? (
                     '카카오톡 메세지가 복사되었습니다.'
                   ) : (
                     <>
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="black">
                         <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.527 1.523 4.74 3.813 6.063l-.938 3.5 4.063-2.688A11.4 11.4 0 0 0 12 17.5c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
                       </svg>
-                      카카오톡 메세지 복사 후 확인
+                      카카오톡 메세지 복사 및 확인
                     </>
                   )}
                 </button>
               ) : (
                 <button
-                  onClick={handleActionConfirm}
-                  className="w-full py-3.5 rounded-xl font-black text-sm shadow-lg transition-all active:scale-95 bg-[#af7c73] text-white shadow-[#af7c73]/20"
+                  onClick={handleReturnWithCopy}
+                  disabled={actionCopied}
+                  className="w-full py-3.5 rounded-xl font-black text-sm shadow-lg transition-all active:scale-95 bg-[#FEE500] text-black shadow-yellow-200/50 flex items-center justify-center gap-2 disabled:opacity-80"
                 >
-                  확인
+                  {actionCopied ? (
+                    '카카오톡 메세지가 복사되었습니다.'
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="black">
+                        <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.527 1.523 4.74 3.813 6.063l-.938 3.5 4.063-2.688A11.4 11.4 0 0 0 12 17.5c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
+                      </svg>
+                      카카오톡 메세지 복사 및 확인
+                    </>
+                  )}
                 </button>
               )}
             </div>

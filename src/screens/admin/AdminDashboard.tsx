@@ -31,18 +31,25 @@ export const AdminDashboard = ({
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Google Sheets 강제 동기화 (5분 디바운스 무시)
+  // Google Sheets 강제 동기화 후 앱 도서 목록 즉시 갱신
   const forceSync = async () => {
     if (isSyncing) return;
     setIsSyncing(true);
     try {
+      // 1단계: 서버 캐시 강제 갱신
       const r = await fetch('/api/books/sync', { method: 'POST' });
       const data = await r.json();
-      if (r.ok) {
-        toastApi.success(`도서 동기화 완료 (총 ${data.booksCount}권)`);
-      } else {
+      if (!r.ok) {
         toastApi.error(data.error || '동기화에 실패했습니다.');
+        return;
       }
+      // 2단계: 갱신된 도서 목록을 바로 앱 상태에 반영 (캐시 인스턴스 불일치 우회)
+      const booksRes = await fetch('/api/books');
+      if (booksRes.ok) {
+        const freshBooks = await booksRes.json();
+        if (freshBooks?.length > 0) setBooks(freshBooks);
+      }
+      toastApi.success(`도서 동기화 완료 (총 ${data.booksCount}권)`);
     } catch (e) {
       console.error('Force sync failed:', e);
       toastApi.error('서버와 통신 중 오류가 발생했습니다.');

@@ -256,12 +256,6 @@ export default function App() {
       if (res.ok) {
         await fetchBooks();
         await fetchLoans();
-        toastApi.loanSuccess({
-          bookTitle: book.title,
-          userName: currentUser.name,
-          borrowDate: newLoan.borrowDate,
-          returnDate: newLoan.returnDate,
-        });
         setScreen('my-loans');
       } else if (res.status === 400) {
         toastApi.info('이미 대출 중인 도서입니다. 최신 상태를 확인해 주세요.');

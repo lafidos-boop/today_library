@@ -57,13 +57,10 @@ export const BookDetailScreen = ({
       <div className="mb-4">
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <span
-            className={`px-2.5 py-1 text-white text-[10px] font-black rounded-lg uppercase tracking-wider ${
-              isMyLoan
-                ? currentLoan!.isOverdue
-                  ? 'bg-error'
-                  : 'bg-primary'
-                : 'bg-primary'
-            }`}
+            className="px-2.5 py-1 text-white text-[10px] font-black rounded-lg uppercase tracking-wider"
+            style={{
+              backgroundColor: isMyLoan && currentLoan!.isOverdue ? '#ba1a1a' : '#476500',
+            }}
           >
             {isMyLoan
               ? currentLoan!.isOverdue

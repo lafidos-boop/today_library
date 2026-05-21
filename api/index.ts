@@ -605,10 +605,21 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/users', async (req, res) => {
   try {
     const hashedPassword = await hashIfPlain(req.body.password);
+
+    let newId = req.body.id;
+    if (!newId) {
+      const existingUsers = await sheetsDb.listAll('users');
+      const maxNum = existingUsers.reduce((max: number, u: any) => {
+        const m = String(u.id).match(/^M-(\d+)$/);
+        return m ? Math.max(max, parseInt(m[1], 10)) : max;
+      }, 0);
+      newId = `M-${String(maxNum + 1).padStart(3, '0')}`;
+    }
+
     const newUser = {
       ...req.body,
       ...(hashedPassword ? { password: hashedPassword } : {}),
-      id: req.body.id || `M-${Math.floor(Math.random() * 900) + 100}`,
+      id: newId,
       joined: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').replace(/\.$/, ''),
       loans: 0,
     };

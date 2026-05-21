@@ -185,7 +185,7 @@ export const MyLoansScreen = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center"
+            className="fixed inset-0 bg-black/40 z-[100] flex items-end justify-center"
             onClick={() => setShowHistory(false)}
           >
             <motion.div
@@ -194,7 +194,7 @@ export const MyLoansScreen = ({
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-surface w-full max-w-md rounded-t-3xl p-6 max-h-[75vh] flex flex-col"
+              className="bg-surface w-full max-w-md rounded-t-3xl p-6 pb-10 max-h-[80vh] flex flex-col"
             >
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">

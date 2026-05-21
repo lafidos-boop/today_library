@@ -74,11 +74,17 @@ export default function App() {
   const fetchLoans = async () => {
     if (!currentUser) return;
     try {
-      const res = await fetch(`/api/loans/${currentUser.id}`);
-      const data = await res.json();
-      // Join with book data (assuming books are already loaded)
+      const [loansRes, booksRes] = await Promise.all([
+        fetch(`/api/loans/${currentUser.id}`),
+        fetch('/api/books'),
+      ]);
+      const [data, freshBooks] = await Promise.all([loansRes.json(), booksRes.json()]);
+
+      if (freshBooks?.length) setBooks(freshBooks);
+      const booksForJoin: Book[] = freshBooks?.length ? freshBooks : books;
+
       const joinedLoans = data.map((l: any) => {
-        const foundBook = books.find((b: Book) => b.id === l.bookId);
+        const foundBook = booksForJoin.find((b: Book) => b.id === l.bookId);
         return {
           ...l,
           book: foundBook || {

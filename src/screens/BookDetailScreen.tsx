@@ -62,9 +62,7 @@ export const BookDetailScreen = ({
                 ? currentLoan!.isOverdue
                   ? 'bg-error'
                   : 'bg-primary'
-                : book.status === 'borrowed'
-                  ? 'bg-onSurfaceVariant'
-                  : 'bg-primary'
+                : 'bg-primary'
             }`}
           >
             {isMyLoan

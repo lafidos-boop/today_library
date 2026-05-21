@@ -58,10 +58,22 @@ export const BookDetailScreen = ({
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <span
             className={`px-2.5 py-1 text-white text-[10px] font-black rounded-lg uppercase tracking-wider ${
-              isMyLoan ? (currentLoan!.isOverdue ? 'bg-error' : 'bg-primaryContainer') : 'bg-primary'
+              isMyLoan
+                ? currentLoan!.isOverdue
+                  ? 'bg-error'
+                  : 'bg-primary'
+                : book.status === 'borrowed'
+                  ? 'bg-onSurfaceVariant'
+                  : 'bg-primary'
             }`}
           >
-            {isMyLoan ? (currentLoan!.isOverdue ? '연체 중' : '대출 중') : '보관 중'}
+            {isMyLoan
+              ? currentLoan!.isOverdue
+                ? '연체 중'
+                : '대출 중'
+              : book.status === 'borrowed'
+                ? '대출 중'
+                : '보관 중'}
           </span>
           <span className="px-2.5 py-1 bg-surfaceContainerHigh text-onSurfaceVariant text-xs font-bold rounded-lg uppercase tracking-widest">
             {book.id}

@@ -548,7 +548,7 @@ app.post('/api/applications', async (req, res) => {
     const hashedPassword = await hashIfPlain(req.body.password);
     const newApp = {
       id: Date.now(),
-      name: req.body.name || '', email: req.body.email || '', phone: req.body.phone || '',
+      name: req.body.name || '', phone: req.body.phone || '',
       password: hashedPassword || '',
       date: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').replace(/\.$/, ''),
       status: 'pending',

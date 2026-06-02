@@ -21,7 +21,6 @@ export const SignupScreen = ({
 }) => {
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     phone: '',
     password: '',
   });
@@ -29,7 +28,7 @@ export const SignupScreen = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignup = async () => {
-    if (!formData.name || !formData.email || !formData.phone || !formData.password) {
+    if (!formData.name || !formData.phone || !formData.password) {
       toastApi.error('모든 항목을 입력해 주세요.');
       return;
     }
@@ -82,19 +81,6 @@ export const SignupScreen = ({
                   inputMode="text"
                   spellCheck={false}
                   autoCorrect="off"
-                  className="w-full bg-surfaceContainerLow border-none rounded-2xl py-4 px-6 text-base focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-onSurfaceVariant px-1">아이디 또는 이메일</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="example@library.com"
-                  inputMode="email"
-                  autoComplete="email"
                   className="w-full bg-surfaceContainerLow border-none rounded-2xl py-4 px-6 text-base focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                 />
               </div>

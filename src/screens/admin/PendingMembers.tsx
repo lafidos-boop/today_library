@@ -27,7 +27,6 @@ export const PendingMembers = ({
           <div className="flex justify-between items-start">
             <div>
               <h3 className="font-black text-onSurface">{app.name}</h3>
-              <p className="text-xs text-onSurfaceVariant font-medium">{app.email}</p>
               {app.phone && <p className="text-xs text-primary font-bold">{app.phone}</p>}
               <p className="text-[10px] text-onSurfaceVariant opacity-50 font-bold mt-1">신청일: {app.date}</p>
             </div>

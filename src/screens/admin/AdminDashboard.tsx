@@ -31,7 +31,7 @@ export const AdminDashboard = ({
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Google Sheets 강제 동기화 후 앱 도서 목록 즉시 갱신
+  // Google Sheets 강제 동기화 후 앱 도서 목록 즉시 갱신 + 대출 bookId 불일치 자동 수정
   const forceSync = async () => {
     if (isSyncing) return;
     setIsSyncing(true);
@@ -43,12 +43,30 @@ export const AdminDashboard = ({
         toastApi.error(data.error || '동기화에 실패했습니다.');
         return;
       }
-      // 2단계: 갱신된 도서 목록을 바로 앱 상태에 반영 (캐시 인스턴스 불일치 우회)
+
+      // 2단계: 대출 bookId 불일치 자동 수정
+      const fixRes = await fetch('/api/admin/fix-loan-bookids', { method: 'POST' });
+      if (fixRes.ok) {
+        const fixData = await fixRes.json();
+        const updated = fixData.results?.filter((r: any) => r.status === 'updated') ?? [];
+        const noMatch = fixData.results?.filter((r: any) => r.status === 'no_match') ?? [];
+        if (updated.length > 0) {
+          toastApi.success(`대출 도서코드 ${updated.length}건 자동 수정됨`);
+          console.log('[fix-loan-bookids] updated:', updated);
+        }
+        if (noMatch.length > 0) {
+          toastApi.error(`도서코드 매칭 실패 ${noMatch.length}건 — 콘솔 확인`);
+          console.warn('[fix-loan-bookids] no_match:', noMatch);
+        }
+      }
+
+      // 3단계: 갱신된 도서 목록을 바로 앱 상태에 반영
       const booksRes = await fetch('/api/books');
       if (booksRes.ok) {
         const freshBooks = await booksRes.json();
         if (freshBooks?.length > 0) setBooks(freshBooks);
       }
+      await fetchData();
       toastApi.success(`도서 동기화 완료 (총 ${data.booksCount}권)`);
     } catch (e) {
       console.error('Force sync failed:', e);
@@ -128,6 +146,7 @@ export const AdminDashboard = ({
     .map((l: any) => {
       const member = allMembers.find((m: any) => m.id === l.userId);
       return {
+        loanId: l.id,
         name: l.userName || '회원',
         bookTitle: l.bookTitle || '도서',
         loanDate: l.borrowDate || '-',
@@ -135,6 +154,21 @@ export const AdminDashboard = ({
         phone: member?.phone || '',
       };
     });
+
+  const handleDeleteLoan = async (loanId: number, bookTitle: string) => {
+    if (!window.confirm(`"${bookTitle}" 대출 기록을 삭제하시겠습니까?`)) return;
+    try {
+      const res = await fetch(`/api/loans/${loanId}`, { method: 'DELETE' });
+      if (res.ok) {
+        toastApi.success(`"${bookTitle}" 대출 기록이 삭제되었습니다.`);
+        await fetchData();
+      } else {
+        toastApi.error('삭제 중 오류가 발생했습니다.');
+      }
+    } catch (e) {
+      toastApi.error('서버와 통신 중 오류가 발생했습니다.');
+    }
+  };
 
   const approveMember = async (id: number, role: '일반' | '관리자') => {
     const applicant = applicants.find((a) => a.id === id);
@@ -227,7 +261,7 @@ export const AdminDashboard = ({
       />
     );
   if (subView === 'overdue-members')
-    return <OverdueMembers overdueMembers={overdueMembers} onBack={() => setSubView('main')} />;
+    return <OverdueMembers overdueMembers={overdueMembers} onBack={() => setSubView('main')} onDeleteLoan={handleDeleteLoan} />;
   if (subView === 'upload-status')
     return <UploadStatus lastUploaded={lastUploaded} onBack={() => setSubView('main')} />;
   if (subView === 'activities')
@@ -235,10 +269,12 @@ export const AdminDashboard = ({
       <ActivityLog
         recentActivities={recentActivities}
         applicants={applicants}
+        overdueMembers={overdueMembers}
         activityFilter={activityFilter}
         setActivityFilter={setActivityFilter}
         onBack={() => setSubView('main')}
         onGotoApprovals={() => setSubView('members')}
+        onDeleteLoan={handleDeleteLoan}
       />
     );
   if (subView === 'book-search')

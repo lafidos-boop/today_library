@@ -545,10 +545,25 @@ app.get('/api/applications', async (req, res) => {
 
 app.post('/api/applications', async (req, res) => {
   try {
+    const name = (req.body.name || '').trim();
+    const phone = (req.body.phone || '').trim();
+
+    // 동일 이름+전화번호로 이미 대기 중인 신청 또는 승인된 회원이 있으면 거절
+    const [existing, existingUsers] = await Promise.all([
+      sheetsDb.listAll('applications'),
+      sheetsDb.listAll('users'),
+    ]);
+    if (existing.some((a: any) => a.name === name && a.phone === phone)) {
+      return res.status(409).json({ error: '이미 가입 신청이 접수되어 있습니다. 관리자 승인을 기다려 주세요.' });
+    }
+    if (existingUsers.some((u: any) => u.name === name && u.phone === phone)) {
+      return res.status(409).json({ error: '이미 가입된 회원입니다. 로그인 화면에서 로그인해 주세요.' });
+    }
+
     const hashedPassword = await hashIfPlain(req.body.password);
     const newApp = {
       id: Date.now(),
-      name: req.body.name || '', phone: req.body.phone || '',
+      name, phone,
       password: hashedPassword || '',
       date: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').replace(/\.$/, ''),
       status: 'pending',
@@ -607,8 +622,15 @@ app.post('/api/users', async (req, res) => {
     const hashedPassword = await hashIfPlain(req.body.password);
 
     let newId = req.body.id;
+    const existingUsers = await sheetsDb.listAll('users');
+
+    // 동일 이름의 회원이 이미 존재하면 중복 생성 방지
+    const dupName = (req.body.name || '').trim();
+    if (existingUsers.some((u: any) => u.name === dupName)) {
+      return res.status(409).json({ error: `'${dupName}' 이름의 회원이 이미 존재합니다.` });
+    }
+
     if (!newId) {
-      const existingUsers = await sheetsDb.listAll('users');
       const maxNum = existingUsers.reduce((max: number, u: any) => {
         const m = String(u.id).match(/^M-(\d+)$/);
         return m ? Math.max(max, parseInt(m[1], 10)) : max;
@@ -663,6 +685,61 @@ app.put('/api/users/:id', async (req, res) => {
   } catch (error) {
     console.error('PUT /api/users error:', error);
     res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// 대출 중인 bookId가 현재 도서 목록에 없는 항목을 찾아 bookTitle로 재매핑
+// GET  → 불일치 목록 조회 (dry-run)
+// POST → 실제 업데이트 실행
+app.get('/api/admin/fix-loan-bookids', async (req, res) => {
+  try {
+    const [loans, books] = await Promise.all([
+      sheetsDb.listAll('loans'),
+      fetchBooksFromGoogleSheet(),
+    ]);
+    const bookByTitle = new Map<string, string>();
+    for (const b of books) bookByTitle.set(String(b.title).trim(), String(b.id));
+
+    const mismatches = loans
+      .filter((l) => !books.some((b) => String(b.id) === String(l.bookId)))
+      .map((l) => ({
+        loanId: l.id,
+        userName: l.userName,
+        bookTitle: l.bookTitle,
+        oldBookId: l.bookId,
+        newBookId: bookByTitle.get(String(l.bookTitle).trim()) || null,
+      }));
+    res.json({ total: loans.length, mismatches });
+  } catch (error) {
+    console.error('GET /api/admin/fix-loan-bookids error:', error);
+    res.status(500).json({ error: String(error) });
+  }
+});
+
+app.post('/api/admin/fix-loan-bookids', async (req, res) => {
+  try {
+    const [loans, books] = await Promise.all([
+      sheetsDb.listAll('loans'),
+      fetchBooksFromGoogleSheet(),
+    ]);
+    const bookByTitle = new Map<string, string>();
+    for (const b of books) bookByTitle.set(String(b.title).trim(), String(b.id));
+
+    const results: any[] = [];
+    for (const l of loans) {
+      if (books.some((b) => String(b.id) === String(l.bookId))) continue;
+      const newId = bookByTitle.get(String(l.bookTitle).trim());
+      if (!newId) {
+        results.push({ loanId: l.id, userName: l.userName, bookTitle: l.bookTitle, status: 'no_match' });
+        continue;
+      }
+      await sheetsDb.updateById('loans', l.id, { bookId: newId });
+      results.push({ loanId: l.id, userName: l.userName, bookTitle: l.bookTitle, oldBookId: l.bookId, newBookId: newId, status: 'updated' });
+    }
+    res.json({ results });
+  } catch (error) {
+    console.error('POST /api/admin/fix-loan-bookids error:', error);
+    res.status(500).json({ error: String(error) });
   }
 });
 

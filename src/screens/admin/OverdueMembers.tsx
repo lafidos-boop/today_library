@@ -1,16 +1,18 @@
 // 관리자 — 연체자 목록 (실 대출에서 isOverdue=true 항목 추출).
 import React from 'react';
-import { AlertCircle, Phone } from 'lucide-react';
+import { AlertCircle, Phone, Trash2 } from 'lucide-react';
 import { ScreenWrapper, SubPageHeader } from '../../components/Layout';
 
-type OverdueRow = { name: string; bookTitle: string; loanDate: string; overdueDays: number; phone?: string };
+type OverdueRow = { loanId?: number; name: string; bookTitle: string; loanDate: string; overdueDays: number; phone?: string };
 
 export const OverdueMembers = ({
   overdueMembers,
   onBack,
+  onDeleteLoan,
 }: {
   overdueMembers: OverdueRow[];
   onBack: () => void;
+  onDeleteLoan?: (loanId: number, bookTitle: string) => void;
 }) => (
   <ScreenWrapper>
     <SubPageHeader
@@ -28,7 +30,17 @@ export const OverdueMembers = ({
               <h3 className="font-black text-onSurface text-sm inline-block">{item.name}</h3>
               <span className="text-[10px] text-error font-black ml-2 bg-error/10 px-1.5 py-0.5 rounded">+{item.overdueDays}일</span>
             </div>
-            <span className="text-[10px] text-onSurfaceVariant font-bold opacity-40 uppercase tracking-widest">OVERDUE</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-onSurfaceVariant font-bold opacity-40 uppercase tracking-widest">OVERDUE</span>
+              {onDeleteLoan && item.loanId != null && (
+                <button
+                  onClick={() => onDeleteLoan(item.loanId!, item.bookTitle)}
+                  className="p-1.5 rounded-lg bg-error/10 text-error active:scale-95 transition-all"
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between border-t border-[#e2e3d6]/20 pt-2 px-0.5">

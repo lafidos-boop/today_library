@@ -2,7 +2,6 @@
 // '회원' 탭은 가입 신청 대기 + 승인 기록 두 섹션으로 표시.
 import React from 'react';
 import { ClipboardList, Clock, UserCheck, CheckCircle2, BookPlus, AlertCircle, Phone, Trash2 } from 'lucide-react';
-import { ScreenWrapper } from '../../components/Layout';
 
 export type ActivityFilter = 'all' | 'borrow' | 'return' | 'overdue' | 'signup' | 'book_add';
 
@@ -33,18 +32,16 @@ export const ActivityLog = ({
   const bookAddActivities = recentActivities.filter((a: any) => a.type === 'book_add');
 
   return (
-    <ScreenWrapper>
-      {/* 고정 영역: 제목 + 탭바 */}
-      <div className="sticky top-12 -mt-4 -mx-6 px-6 pt-2 pb-0 bg-[#fafaed]/95 backdrop-blur-sm z-20">
-        {/* 제목 */}
+    // flex 레이아웃: 제목+탭은 shrink-0 고정, 리스트만 스크롤
+    <div className="flex flex-col flex-1 overflow-hidden pt-12">
+      {/* ── 고정 헤더: 제목 + 탭 ── */}
+      <div className="shrink-0 px-6 pt-3 pb-0 bg-[#fafaed]">
         <div className="flex items-center gap-2 mb-2">
           <div className="p-1.5 bg-primary/10 rounded-xl text-primary flex-shrink-0">
             <ClipboardList size={15} />
           </div>
           <h2 className="text-base font-black text-onSurface tracking-tight">전체 활동 기록</h2>
         </div>
-
-        {/* 필터 탭 */}
         <div className="flex gap-0.5 border-b-2 border-[#cdd0b8]">
           {[
             { id: 'all', label: '전체' },
@@ -69,7 +66,8 @@ export const ActivityLog = ({
         </div>
       </div>
 
-      <div className="mt-6">
+      {/* ── 스크롤 영역: 리스트 ── */}
+      <div className="flex-1 overflow-y-auto px-6 pb-24 pt-4">
 
       {/* '연체' 탭: 현재 연체 중인 대출 목록 (loans 시트 기준) */}
       {activityFilter === 'overdue' ? (
@@ -269,6 +267,6 @@ export const ActivityLog = ({
         </div>
       )}
       </div>
-    </ScreenWrapper>
+    </div>
   );
 };

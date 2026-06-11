@@ -1,7 +1,6 @@
 // 관리자 — 연체자 목록 (실 대출에서 isOverdue=true 항목 추출).
 import React from 'react';
 import { AlertCircle, Phone, Trash2 } from 'lucide-react';
-import { ScreenWrapper } from '../../components/Layout';
 
 type OverdueRow = { loanId?: number; name: string; bookTitle: string; loanDate: string; overdueDays: number; phone?: string };
 
@@ -14,9 +13,10 @@ export const OverdueMembers = ({
   onBack: () => void;
   onDeleteLoan?: (loanId: number, bookTitle: string) => void;
 }) => (
-  <ScreenWrapper>
-    {/* 고정 타이틀 — 스크롤해도 상단에 유지 */}
-    <div className="sticky top-12 -mt-4 -mx-6 px-6 pt-3 pb-3 mb-3 bg-[#fafaed]/95 backdrop-blur-sm z-20 border-b border-[#e2e3d6]/30">
+  // flex 레이아웃: 제목은 shrink-0 고정, 리스트만 스크롤
+  <div className="flex flex-col flex-1 overflow-hidden pt-12">
+    {/* ── 고정 헤더: 제목 ── */}
+    <div className="shrink-0 px-6 pt-3 pb-3 bg-[#fafaed] border-b border-[#e2e3d6]/30">
       <div className="flex items-center gap-2.5">
         <div className="p-1.5 bg-error/10 rounded-xl text-error flex-shrink-0">
           <AlertCircle size={16} />
@@ -28,7 +28,9 @@ export const OverdueMembers = ({
       </div>
     </div>
 
-    <div className="space-y-2 pb-8">
+    {/* ── 스크롤 영역: 리스트 ── */}
+    <div className="flex-1 overflow-y-auto px-6 pb-24 pt-3">
+    <div className="space-y-2">
       {overdueMembers.map((item, idx) => (
         <div key={idx} className="bg-white px-4 py-3.5 rounded-2xl shadow-sm border border-error/5 flex flex-col gap-2.5">
           <div className="flex justify-between items-center">
@@ -63,5 +65,6 @@ export const OverdueMembers = ({
         </div>
       ))}
     </div>
-  </ScreenWrapper>
+    </div>
+  </div>
 );

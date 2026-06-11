@@ -67,7 +67,7 @@ export const ActivityLog = ({
       </div>
 
       {/* ── 스크롤 영역: 리스트 ── */}
-      <div className="flex-1 overflow-y-auto px-6 pb-24 pt-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24 pt-4">
 
       {/* '연체' 탭: 현재 연체 중인 대출 목록 (loans 시트 기준) */}
       {activityFilter === 'overdue' ? (

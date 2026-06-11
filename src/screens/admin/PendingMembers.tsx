@@ -28,7 +28,7 @@ export const PendingMembers = ({
     </div>
 
     {/* ── 스크롤 영역 ── */}
-    <div className="flex-1 overflow-y-auto px-6 pb-24 pt-4">
+    <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24 pt-4">
       <div className="space-y-3">
         {applicants.map((app) => (
           <div key={app.id} className="bg-white p-5 rounded-3xl shadow-sm border border-[#e2e3d6]/30 flex flex-col gap-4">

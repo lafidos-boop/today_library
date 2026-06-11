@@ -17,7 +17,7 @@ export const OverdueMembers = ({
   <div className="flex flex-col flex-1 overflow-hidden pt-12">
     {/* ── 고정 헤더: 제목 ── */}
     <div className="shrink-0 px-6 pt-3 pb-3 bg-[#fafaed] border-b border-[#e2e3d6]/30">
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-1.5">
         <div className="p-1.5 bg-error/10 rounded-xl text-error flex-shrink-0">
           <AlertCircle size={16} />
         </div>
@@ -29,7 +29,7 @@ export const OverdueMembers = ({
     </div>
 
     {/* ── 스크롤 영역: 리스트 ── */}
-    <div className="flex-1 overflow-y-auto px-6 pb-24 pt-3">
+    <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24 pt-3">
     <div className="space-y-2">
       {overdueMembers.map((item, idx) => (
         <div key={idx} className="bg-white px-4 py-3.5 rounded-2xl shadow-sm border border-error/5 flex flex-col gap-2.5">

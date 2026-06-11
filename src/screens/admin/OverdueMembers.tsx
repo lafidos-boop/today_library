@@ -16,7 +16,7 @@ export const OverdueMembers = ({
 }) => (
   <ScreenWrapper>
     {/* 고정 타이틀 — 스크롤해도 상단에 유지 */}
-    <div className="sticky top-0 -mx-6 px-6 pt-3 pb-3 mb-3 bg-[#fafaed]/95 backdrop-blur-sm z-10 border-b border-[#e2e3d6]/30">
+    <div className="sticky top-16 -mx-6 px-6 pt-3 pb-3 mb-3 bg-[#fafaed]/95 backdrop-blur-sm z-20 border-b border-[#e2e3d6]/30">
       <div className="flex items-center gap-2.5">
         <div className="p-1.5 bg-error/10 rounded-xl text-error flex-shrink-0">
           <AlertCircle size={16} />

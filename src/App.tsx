@@ -476,7 +476,7 @@ export default function App() {
             <motion.div key="admin" className="contents">
               <AdminDashboard
                 setScreen={setScreen}
-                onSubViewChange={(fn) => setAdminBackFn(fn ? () => fn() : null)}
+                onSubViewChange={(fn) => setAdminBackFn(fn ? () => fn : null)}
                 setBooks={(newBooks) => {
                   if (typeof newBooks === 'function') {
                     setBooks(prev => {

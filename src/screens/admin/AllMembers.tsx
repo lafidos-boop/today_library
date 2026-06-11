@@ -2,7 +2,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, ChevronRight, Users, X } from 'lucide-react';
-import { ScreenWrapper, SubPageHeader } from '../../components/Layout';
 import { toastApi } from '../../toast';
 
 export const AllMembers = ({
@@ -33,74 +32,81 @@ export const AllMembers = ({
   );
 
   return (
-    <ScreenWrapper>
-      <SubPageHeader
-        icon={Users}
-        title="전체 회원"
-        extraTitle={<span className="text-sm text-onSurfaceVariant/40 font-bold ml-2">{allMembers.length}명</span>}
-        onBack={onBack}
-      />
-
-      {/* 검색창 */}
-      <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-onSurfaceVariant/40" size={18} />
-        <input
-          type="text"
-          placeholder="이름 또는 회원번호 검색"
-          value={memberSearch}
-          onChange={(e) => setMemberSearch(e.target.value)}
-          className="w-full bg-white border border-[#e2e3d6]/60 rounded-2xl py-4 pl-12 pr-4 text-base focus:ring-2 focus:ring-primary/10 transition-all font-medium"
-        />
+    <div className="flex flex-col flex-1 overflow-hidden pt-12">
+      {/* ── 고정 헤더: 제목 + 검색창 ── */}
+      <div className="shrink-0 px-6 pt-3 pb-3 bg-[#fafaed] border-b border-[#e2e3d6]/30">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="p-1.5 bg-primary/10 rounded-xl text-primary flex-shrink-0">
+            <Users size={15} />
+          </div>
+          <h2 className="text-base font-black text-onSurface tracking-tight">
+            전체 회원
+            <span className="text-sm text-onSurfaceVariant/40 font-bold ml-2">{allMembers.length}명</span>
+          </h2>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-onSurfaceVariant/40" size={16} />
+          <input
+            type="text"
+            placeholder="이름 또는 회원번호 검색"
+            value={memberSearch}
+            onChange={(e) => setMemberSearch(e.target.value)}
+            className="w-full bg-white border border-[#e2e3d6]/60 rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-primary/10 transition-all font-medium"
+          />
+        </div>
       </div>
 
-      <div className="space-y-2 pb-8">
-        {filteredMembers.length > 0 ? (
-          filteredMembers.map((member) => (
-            <div
-              key={member.id}
-              onClick={() => setSelectedMember(member)}
-              className="bg-white px-4 py-3 rounded-2xl shadow-sm border border-[#e2e3d6]/30 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-[#eeefe2] overflow-hidden border border-[#c4c9b4]/20 flex-shrink-0">
-                  <img
-                    src={member.profileImage || `https://picsum.photos/seed/${member.id}/100/100`}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-black text-onSurface text-sm truncate">
-                    {member.name}
-                    <span className="text-[10px] text-onSurfaceVariant/40 font-bold ml-1.5">{member.id}</span>
-                  </h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-onSurfaceVariant font-bold opacity-40 uppercase tracking-widest">{member.joined} 가입</span>
-                    <div className="w-0.5 h-0.5 bg-onSurfaceVariant/20 rounded-full" />
-                    <span className="text-[10px] text-primary font-black">
-                      대출 {allLoans.filter((l) => l.userId === member.id).length}권
-                    </span>
+      {/* ── 스크롤 영역: 회원 목록 ── */}
+      <div className="flex-1 overflow-y-auto px-6 pb-24 pt-3">
+        <div className="space-y-2">
+          {filteredMembers.length > 0 ? (
+            filteredMembers.map((member) => (
+              <div
+                key={member.id}
+                onClick={() => setSelectedMember(member)}
+                className="bg-white px-4 py-3 rounded-2xl shadow-sm border border-[#e2e3d6]/30 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#eeefe2] overflow-hidden border border-[#c4c9b4]/20 flex-shrink-0">
+                    <img
+                      src={member.profileImage || `https://picsum.photos/seed/${member.id}/100/100`}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-black text-onSurface text-sm truncate">
+                      {member.name}
+                      <span className="text-[10px] text-onSurfaceVariant/40 font-bold ml-1.5">{member.id}</span>
+                    </h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-onSurfaceVariant font-bold opacity-40 uppercase tracking-widest">{member.joined} 가입</span>
+                      <div className="w-0.5 h-0.5 bg-onSurfaceVariant/20 rounded-full" />
+                      <span className="text-[10px] text-primary font-black">
+                        대출 {allLoans.filter((l) => l.userId === member.id).length}권
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-2 py-0.5 rounded-lg text-[10px] font-black flex-shrink-0 ${
+                      member.level === '관리자' ? 'bg-primary/10 text-primary' : 'bg-surfaceContainerLow text-onSurfaceVariant opacity-60'
+                    }`}
+                  >
+                    {member.level}
+                  </span>
+                  <ChevronRight size={14} className="text-onSurfaceVariant opacity-20" />
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`px-2 py-0.5 rounded-lg text-[10px] font-black flex-shrink-0 ${
-                    member.level === '관리자' ? 'bg-primary/10 text-primary' : 'bg-surfaceContainerLow text-onSurfaceVariant opacity-60'
-                  }`}
-                >
-                  {member.level}
-                </span>
-                <ChevronRight size={14} className="text-onSurfaceVariant opacity-20" />
-              </div>
+            ))
+          ) : (
+            <div className="py-20 text-center opacity-30 flex flex-col items-center">
+              <Users size={40} className="mb-4" />
+              <p className="font-black text-sm">해당 회원을 찾을 수 없습니다.</p>
             </div>
-          ))
-        ) : (
-          <div className="py-20 text-center opacity-30 flex flex-col items-center">
-            <Users size={40} className="mb-4" />
-            <p className="font-black text-sm">해당 회원을 찾을 수 없습니다.</p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Member Detail Modal */}
@@ -137,7 +143,6 @@ export const AllMembers = ({
                 </div>
                 <div className="space-y-1.5 pt-2">
                   <label className="text-xs font-bold text-onSurfaceVariant px-1">비밀번호 변경</label>
-                  {/* 보안: 기존 비밀번호 평문 노출 금지 — 비워두고 입력 시에만 변경 */}
                   <input
                     type="password"
                     placeholder="새 비밀번호 (변경 시에만 입력)"
@@ -172,6 +177,6 @@ export const AllMembers = ({
           </div>
         )}
       </AnimatePresence>
-    </ScreenWrapper>
+    </div>
   );
 };

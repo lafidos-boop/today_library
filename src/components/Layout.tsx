@@ -121,7 +121,7 @@ export const Header = ({
       <Leaf size={18} className="text-primary/60 flex-shrink-0" />
       <span className="text-xl font-black text-primary tracking-tight flex-1">{title}</span>
       {rightText && (
-        <span className="text-xs font-black text-primary/60 bg-primary/8 px-3 py-1.5 rounded-full flex-shrink-0 tracking-tight">
+        <span className="text-xs font-black text-primary/50 border-b-2 border-primary/30 pb-0.5 flex-shrink-0 tracking-tight">
           {rightText}
         </span>
       )}

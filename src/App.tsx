@@ -408,7 +408,7 @@ export default function App() {
         onBack={adminBackFn ?? handleBack}
       />
 
-      <main className="flex flex-col min-h-screen">
+      <main className="flex flex-col h-screen">
         <AnimatePresence mode="wait">
           {screen === 'home' && (
             <motion.div key="home" className="contents">

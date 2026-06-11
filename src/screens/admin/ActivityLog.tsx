@@ -35,7 +35,7 @@ export const ActivityLog = ({
   return (
     <ScreenWrapper>
       {/* 고정 영역: 제목 + 탭바 */}
-      <div className="sticky top-16 -mx-6 px-6 pt-2 pb-0 bg-[#fafaed]/95 backdrop-blur-sm z-20">
+      <div className="sticky top-12 -mt-4 -mx-6 px-6 pt-2 pb-0 bg-[#fafaed]/95 backdrop-blur-sm z-20">
         {/* 제목 */}
         <div className="flex items-center gap-2 mb-2">
           <div className="p-1.5 bg-primary/10 rounded-xl text-primary flex-shrink-0">

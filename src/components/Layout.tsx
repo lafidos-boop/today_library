@@ -100,11 +100,13 @@ export const Header = ({
   showBack,
   onBack,
   exitLabel,
+  rightText,
 }: {
   title: string;
   showBack?: boolean;
   onBack?: () => void;
   exitLabel?: string;
+  rightText?: string;
 }) => (
   <header className="fixed top-0 left-0 w-full z-50 bg-[#fafaed]/80 backdrop-blur-xl border-b border-[#e2e3d6]/20">
     <div className="flex items-center px-5 h-12 w-full max-w-md mx-auto gap-2">
@@ -118,6 +120,11 @@ export const Header = ({
       )}
       <Leaf size={18} className="text-primary/60 flex-shrink-0" />
       <span className="text-xl font-black text-primary tracking-tight flex-1">{title}</span>
+      {rightText && (
+        <span className="text-xs font-black text-primary/60 bg-primary/8 px-3 py-1.5 rounded-full flex-shrink-0 tracking-tight">
+          {rightText}
+        </span>
+      )}
       {exitLabel && (
         <button
           onClick={onBack}

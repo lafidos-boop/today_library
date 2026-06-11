@@ -353,7 +353,7 @@ export default function App() {
       case 'book-detail': return '오늘책방';
       case 'my-loans': return '오늘책방';
       case 'profile': return '내 정보';
-      case 'admin': return '운영 관리';
+      case 'admin': return '오늘책방';
       case 'search-results': return '검색 결과';
       default: return '오늘책방';
     }
@@ -401,7 +401,8 @@ export default function App() {
       <Header
         title={getHeaderTitle()}
         showBack={false}
-        exitLabel={screen === 'admin' ? '밖으로' : (screen === 'book-detail' || screen === 'search-results') ? '뒤로' : undefined}
+        rightText={screen === 'admin' ? '운영현황' : undefined}
+        exitLabel={screen === 'admin' ? undefined : (screen === 'book-detail' || screen === 'search-results') ? '뒤로' : undefined}
         onBack={handleBack}
       />
 

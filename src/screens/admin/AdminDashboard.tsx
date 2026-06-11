@@ -1,6 +1,6 @@
 // 관리자 대시보드 — 운영 현황 요약 + 빠른 실행 + sub-view 디스패치.
 import React, { useEffect, useState } from 'react';
-import { ChevronRight, FileSpreadsheet, Users, Clock, RefreshCw, ImagePlus } from 'lucide-react';
+import { ChevronRight, FileSpreadsheet, Users, Clock, RefreshCw, ImagePlus, Activity, Zap } from 'lucide-react';
 import { ScreenWrapper } from '../../components/Layout';
 import { toastApi } from '../../toast';
 import type { Screen, Book } from '../../types';
@@ -305,11 +305,7 @@ export const AdminDashboard = ({
   // === 메인 화면 ===
   return (
     <ScreenWrapper>
-      <div className="mb-6 mt-1">
-        <h2 className="text-2xl font-black text-onSurface tracking-tight">운영 현황 요약</h2>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2.5 mb-8">
+      <div className="grid grid-cols-3 gap-2.5 mb-8 mt-1">
         <div className="bg-white p-3.5 rounded-2xl border-l-4 border-[#add461] shadow-sm flex flex-col">
           <span className="text-[11px] font-bold text-onSurfaceVariant uppercase tracking-widest block mb-1.5 opacity-50">총 회원</span>
           <h3 className="text-xl font-black text-primary tracking-tight">{allMembers.length}</h3>
@@ -333,11 +329,15 @@ export const AdminDashboard = ({
 
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-black text-onSurface">최근 활동</h3>
+          <h3 className="text-sm font-black text-onSurface flex items-center gap-2">
+            <Activity size={15} className="text-primary" />
+            최근 활동
+          </h3>
           <button
             onClick={() => setSubView('activities')}
-            className="text-primary font-bold text-xs underline underline-offset-4"
+            className="text-primary font-bold text-[10px] flex items-center gap-1.5 bg-primary/8 px-2.5 py-1.5 rounded-lg active:scale-95 transition-all"
           >
+            <ChevronRight size={11} />
             전체보기
           </button>
         </div>
@@ -364,7 +364,10 @@ export const AdminDashboard = ({
 
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4 px-1 gap-2">
-          <h3 className="text-[10px] font-black text-onSurfaceVariant uppercase tracking-widest opacity-50">빠른 실행</h3>
+          <h3 className="text-sm font-black text-onSurface flex items-center gap-2">
+            <Zap size={15} className="text-primary" />
+            빠른 실행
+          </h3>
           <div className="flex gap-2">
             <button
               onClick={enrichCovers}

@@ -1,6 +1,6 @@
 // 관리자 대시보드 — 운영 현황 요약 + 빠른 실행 + sub-view 디스패치.
 import React, { useEffect, useState } from 'react';
-import { ChevronRight, FileSpreadsheet, Users, Clock, RefreshCw } from 'lucide-react';
+import { ChevronRight, FileSpreadsheet, Users, Clock, RefreshCw, ImagePlus } from 'lucide-react';
 import { ScreenWrapper } from '../../components/Layout';
 import { toastApi } from '../../toast';
 import type { Screen, Book } from '../../types';
@@ -30,6 +30,28 @@ export const AdminDashboard = ({
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>('all');
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isEnriching, setIsEnriching] = useState(false);
+
+  const enrichCovers = async () => {
+    if (isEnriching) return;
+    setIsEnriching(true);
+    try {
+      const r = await fetch('/api/books/enrich-covers', { method: 'POST' });
+      const data = await r.json();
+      if (!r.ok) { toastApi.error(data.error || '표지 채우기 실패'); return; }
+      toastApi.success(`표지 업데이트 완료 (${data.updated}권 갱신, ${data.notFound}권 미발견)`);
+      // 갱신된 도서 반영
+      const booksRes = await fetch('/api/books/sync', { method: 'POST' });
+      if (booksRes.ok) {
+        const freshBooks = await fetch('/api/books').then(r => r.json());
+        if (freshBooks?.length > 0) setBooks(freshBooks);
+      }
+    } catch (e) {
+      toastApi.error('서버와 통신 중 오류가 발생했습니다.');
+    } finally {
+      setIsEnriching(false);
+    }
+  };
 
   // Google Sheets 강제 동기화 후 앱 도서 목록 즉시 갱신 + 대출 bookId 불일치 자동 수정
   const forceSync = async () => {
@@ -343,14 +365,24 @@ export const AdminDashboard = ({
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4 px-1 gap-2">
           <h3 className="text-[10px] font-black text-onSurfaceVariant uppercase tracking-widest opacity-50">빠른 실행</h3>
-          <button
-            onClick={forceSync}
-            disabled={isSyncing}
-            className="text-primary font-bold text-[10px] flex items-center gap-1.5 bg-primary/8 px-2.5 py-1.5 rounded-lg active:scale-95 transition-all disabled:opacity-40"
-          >
-            <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
-            {isSyncing ? '동기화 중...' : '도서 동기화'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={enrichCovers}
+              disabled={isEnriching}
+              className="text-primary font-bold text-[10px] flex items-center gap-1.5 bg-primary/8 px-2.5 py-1.5 rounded-lg active:scale-95 transition-all disabled:opacity-40"
+            >
+              <ImagePlus size={12} className={isEnriching ? 'animate-pulse' : ''} />
+              {isEnriching ? '표지 채우는 중...' : '표지 자동채우기'}
+            </button>
+            <button
+              onClick={forceSync}
+              disabled={isSyncing}
+              className="text-primary font-bold text-[10px] flex items-center gap-1.5 bg-primary/8 px-2.5 py-1.5 rounded-lg active:scale-95 transition-all disabled:opacity-40"
+            >
+              <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
+              {isSyncing ? '동기화 중...' : '도서 동기화'}
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-4 gap-2 text-center">

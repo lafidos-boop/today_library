@@ -538,6 +538,106 @@ app.post('/api/books/add', async (req, res) => {
   }
 });
 
+// 컬럼 인덱스 → 시트 열 문자 (A, B, ..., Z, AA, AB, ...)
+function colLetter(idx: number): string {
+  if (idx < 26) return String.fromCharCode(65 + idx);
+  return String.fromCharCode(64 + Math.floor(idx / 26)) + String.fromCharCode(65 + (idx % 26));
+}
+
+// 표지/ISBN이 없는 도서를 카카오 Books API로 채우고 구글 시트에 일괄 업데이트
+app.post('/api/books/enrich-covers', async (req, res) => {
+  try {
+    const kakaoKey = process.env.VITE_KAKAO_API_KEY || process.env.KAKAO_API_KEY;
+    if (!kakaoKey) return res.status(500).json({ error: 'KAKAO API 키가 설정되지 않았습니다.' });
+
+    const targetRoom = req.body.room as string | undefined;
+    const rooms = targetRoom ? TARGET_SHEETS.filter(r => r === targetRoom) : TARGET_SHEETS;
+    if (rooms.length === 0) return res.status(400).json({ error: '유효하지 않은 열람실입니다.' });
+
+    const isbnCache = await loadIsbnCache();
+    let updated = 0, notFound = 0, skipped = 0;
+
+    for (const room of rooms) {
+      let rows: any[];
+      try { rows = await sheetsDb.listAll(room); }
+      catch (e) { console.warn(`enrich: 탭 "${room}" 읽기 실패`, (e as Error).message); continue; }
+
+      const headers = await getHeaders(room);
+      const coverColIdx = headers.indexOf('표지');
+      const isbnColIdx = headers.indexOf('ISBN');
+      if (coverColIdx === -1) { console.warn(`enrich: "${room}" 탭에 표지 컬럼 없음`); continue; }
+
+      // 1단계: 카카오 API로 표지/ISBN 수집
+      type CellUpdate = { range: string; values: string[][] };
+      const cellUpdates: CellUpdate[] = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const title = String(r['제목'] || '').trim();
+        const author = String(r['저자'] || '').trim();
+        const existingCover = String(r['표지'] || '').trim();
+        const existingIsbn = String(r['ISBN'] || '').trim();
+
+        if (!title) { skipped++; continue; }
+        if (existingCover && !existingCover.includes('picsum.photos')) { skipped++; continue; }
+
+        const cacheKey = isbnKey(title, author);
+        const cached = isbnCache[cacheKey];
+        let cover = (cached?.cover && !cached.cover.includes('picsum.photos')) ? cached.cover : '';
+        let isbn = existingIsbn || cached?.isbn || '';
+
+        if (!cover) {
+          try {
+            await new Promise((resolve) => setTimeout(resolve, 200));
+            const resp = await fetch(
+              `https://dapi.kakao.com/v3/search/book?target=title&query=${encodeURIComponent(title)}&size=3`,
+              { headers: { Authorization: `KakaoAK ${kakaoKey}` } },
+            );
+            const data = await resp.json() as any;
+            const doc = data.documents?.[0];
+            if (doc?.thumbnail) {
+              cover = doc.thumbnail;
+              isbn = isbn || doc.isbn?.split(' ')[0] || '';
+              isbnCache[cacheKey] = { isbn, cover };
+            }
+          } catch (e) {
+            console.error(`enrich: "${title}" 카카오 요청 실패`, e);
+          }
+        }
+
+        if (!cover) { notFound++; continue; }
+
+        const sheetRow = i + 2;
+        cellUpdates.push({ range: `${room}!${colLetter(coverColIdx)}${sheetRow}`, values: [[cover]] });
+        if (isbnColIdx >= 0 && isbn && !existingIsbn) {
+          cellUpdates.push({ range: `${room}!${colLetter(isbnColIdx)}${sheetRow}`, values: [[isbn]] });
+        }
+        updated++;
+      }
+
+      // 2단계: 수집된 업데이트를 단일 batchUpdate 호출로 시트에 반영
+      if (cellUpdates.length > 0) {
+        await sheets.spreadsheets.values.batchUpdate({
+          spreadsheetId: SHEET_ID,
+          requestBody: {
+            valueInputOption: 'RAW',
+            data: cellUpdates.map(u => ({ range: u.range, values: u.values })),
+          },
+        });
+        console.log(`enrich "${room}": ${updated}건 시트 업데이트 완료`);
+      }
+    }
+
+    try { await fs.writeFile(ISBN_CACHE_PATH, JSON.stringify(isbnCache, null, 2), 'utf-8'); } catch {}
+    lastSyncAt = 0;
+
+    res.json({ updated, notFound, skipped, total: updated + notFound + skipped });
+  } catch (e) {
+    console.error('POST /api/books/enrich-covers error:', e);
+    res.status(500).json({ error: '표지 채우기 중 오류가 발생했습니다.' });
+  }
+});
+
 app.get('/api/applications', async (req, res) => {
   try { res.json(await sheetsDb.listAll('applications')); }
   catch (error) { console.error('GET /api/applications error:', error); res.json([]); }

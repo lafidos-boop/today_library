@@ -121,8 +121,11 @@ export const Header = ({
       <Leaf size={18} className="text-primary/60 flex-shrink-0" />
       <span className="text-xl font-black text-primary tracking-tight flex-1">{title}</span>
       {rightText && (
-        <span className="text-xs font-black text-primary/50 border-b-2 border-primary/30 pb-0.5 flex-shrink-0 tracking-tight">
-          {rightText}
+        <span className="flex items-center gap-0 flex-shrink-0">
+          <span className="w-[3px] h-4 bg-primary rounded-full mr-2" />
+          <span className="text-sm font-black text-primary tracking-tight leading-none">
+            {rightText}
+          </span>
         </span>
       )}
       {exitLabel && (

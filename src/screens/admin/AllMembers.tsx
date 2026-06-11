@@ -57,7 +57,7 @@ export const AllMembers = ({
       </div>
 
       {/* ── 스크롤 영역: 회원 목록 ── */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24 pt-3">
+      <div className="flex-1 min-h-0 overflow-y-scroll px-6 pb-24 pt-3">
         <div className="space-y-2">
           {filteredMembers.length > 0 ? (
             filteredMembers.map((member) => (

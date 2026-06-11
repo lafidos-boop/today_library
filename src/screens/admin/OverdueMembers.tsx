@@ -29,7 +29,7 @@ export const OverdueMembers = ({
     </div>
 
     {/* ── 스크롤 영역: 리스트 ── */}
-    <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24 pt-3">
+    <div className="flex-1 min-h-0 overflow-y-scroll px-6 pb-24 pt-3">
     <div className="space-y-2">
       {overdueMembers.map((item, idx) => (
         <div key={idx} className="bg-white px-4 py-3.5 rounded-2xl shadow-sm border border-error/5 flex flex-col gap-2.5">

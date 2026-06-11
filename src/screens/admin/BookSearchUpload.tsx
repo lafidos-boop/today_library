@@ -154,7 +154,7 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
         </div>
 
         {/* 스크롤 영역 */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24 pt-4">
+        <div className="flex-1 min-h-0 overflow-y-scroll px-6 pb-24 pt-4">
           {/* 선택한 도서 미리보기 */}
           <div className="flex gap-3 bg-white p-4 rounded-2xl mb-6 border border-[#e2e3d6]/30 shadow-sm">
             {selectedBook.cover ? (
@@ -283,7 +283,7 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
       </div>
 
       {/* 스크롤 영역 */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24 pt-4">
+      <div className="flex-1 min-h-0 overflow-y-scroll px-6 pb-24 pt-4">
         {/* 검색 입력 */}
         <div className="relative mb-2">
           <input

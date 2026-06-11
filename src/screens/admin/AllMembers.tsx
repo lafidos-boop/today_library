@@ -51,7 +51,7 @@ export const AllMembers = ({
             placeholder="이름 또는 회원번호 검색"
             value={memberSearch}
             onChange={(e) => setMemberSearch(e.target.value)}
-            className="w-full bg-white border border-[#e2e3d6]/60 rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-primary/10 transition-all font-medium"
+            className="w-full bg-white border border-[#e2e3d6]/60 rounded-2xl py-3 pl-11 pr-4 text-base focus:ring-2 focus:ring-primary/10 transition-all font-medium"
           />
         </div>
       </div>
@@ -147,7 +147,7 @@ export const AllMembers = ({
                     type="password"
                     placeholder="새 비밀번호 (변경 시에만 입력)"
                     id="member-password-input"
-                    className="w-full bg-surfaceContainerLow border-none rounded-xl py-3 px-4 text-sm font-black focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full bg-surfaceContainerLow border-none rounded-xl py-3 px-4 text-base font-black focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                 </div>
               </div>

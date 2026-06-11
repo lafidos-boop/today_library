@@ -201,7 +201,7 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
                 <select
                   value={shelf}
                   onChange={(e) => setShelf(e.target.value)}
-                  className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-3 text-sm font-medium font-mono focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+                  className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-3 text-base font-medium font-mono focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
                 >
                   <option value="">선택</option>
                   {SHELF_OPTIONS[room].map((s) => (
@@ -214,7 +214,7 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
                 <select
                   value={row}
                   onChange={(e) => setRow(e.target.value)}
-                  className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+                  className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-3 text-base font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
                 >
                   <option value="">선택</option>
                   {ROW_OPTIONS[room].map((n) => (
@@ -227,7 +227,7 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
                 <select
                   value={col}
                   onChange={(e) => setCol(e.target.value)}
-                  className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+                  className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-3 text-base font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
                 >
                   <option value="">선택</option>
                   {COL_OPTIONS[room].map((n) => (
@@ -244,7 +244,7 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
                 value={genre}
                 onChange={(e) => setGenre(e.target.value)}
                 placeholder="예: 소설, 자연과학, 에세이 …"
-                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-sm font-medium font-korean focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full bg-white border border-[#e2e3d6]/60 rounded-xl py-3.5 px-4 text-base font-medium font-korean focus:ring-2 focus:ring-primary/20 transition-all"
               />
             </div>
           </div>
@@ -292,7 +292,7 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && searchKakao()}
             placeholder="제목, 저자 또는 ISBN으로 검색"
-            className="w-full bg-white border border-[#e2e3d6]/60 rounded-2xl py-4 pl-5 pr-24 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all"
+            className="w-full bg-white border border-[#e2e3d6]/60 rounded-2xl py-4 pl-5 pr-24 text-base font-medium focus:ring-2 focus:ring-primary/20 transition-all"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1.5">
             <label className="w-9 h-9 flex items-center justify-center bg-[#e6eacb] text-primary rounded-xl cursor-pointer active:scale-90 transition-all" title="카메라로 촬영">

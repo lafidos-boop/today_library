@@ -64,6 +64,7 @@ export default function App() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loans, setLoans] = useState<(Loan & { book: Book })[]>([]);
   const [profileImage, setProfileImage] = useState("https://picsum.photos/seed/reader/200/200");
+  const [adminBackFn, setAdminBackFn] = useState<(() => void) | null>(null);
 
   React.useEffect(() => {
     if (currentUser?.profileImage) {
@@ -285,6 +286,7 @@ export default function App() {
   };
 
   const handleBack = () => {
+    if (adminBackFn) { adminBackFn(); return; }
     if (screen === 'book-detail') {
       if (bookDetailSource === 'my-loans') {
         setScreen('my-loans');
@@ -401,9 +403,9 @@ export default function App() {
       <Header
         title={getHeaderTitle()}
         showBack={false}
-        rightText={screen === 'admin' ? '운영현황' : undefined}
-        exitLabel={screen === 'admin' ? undefined : (screen === 'book-detail' || screen === 'search-results') ? '뒤로' : undefined}
-        onBack={handleBack}
+        rightText={screen === 'admin' ? (adminBackFn ? '운영관리' : '운영현황') : undefined}
+        exitLabel={adminBackFn ? '뒤로' : (screen === 'book-detail' || screen === 'search-results') ? '뒤로' : undefined}
+        onBack={adminBackFn ?? handleBack}
       />
 
       <main className="flex flex-col min-h-screen">
@@ -474,6 +476,7 @@ export default function App() {
             <motion.div key="admin" className="contents">
               <AdminDashboard
                 setScreen={setScreen}
+                onSubViewChange={(fn) => setAdminBackFn(fn ? () => fn() : null)}
                 setBooks={(newBooks) => {
                   if (typeof newBooks === 'function') {
                     setBooks(prev => {

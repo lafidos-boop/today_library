@@ -16,11 +16,22 @@ type SubView = 'main' | 'members' | 'all-members' | 'overdue-members' | 'upload-
 export const AdminDashboard = ({
   setScreen,
   setBooks,
+  onSubViewChange,
 }: {
   setScreen: (s: Screen) => void;
   setBooks: React.Dispatch<React.SetStateAction<Book[]>>;
+  onSubViewChange?: (backFn: (() => void) | null) => void;
 }) => {
   const [subView, setSubView] = useState<SubView>('main');
+
+  const goSubView = (v: SubView) => {
+    setSubView(v);
+    if (v === 'main') {
+      onSubViewChange?.(null);
+    } else {
+      onSubViewChange?.(() => { setSubView('main'); onSubViewChange?.(null); });
+    }
+  };
   const [applicants, setApplicants] = useState<any[]>([]);
   const [allMembers, setAllMembers] = useState<any[]>([]);
   const [memberSearch, setMemberSearch] = useState('');
@@ -267,7 +278,7 @@ export const AdminDashboard = ({
 
   // === Sub-view 디스패치 ===
   if (subView === 'members')
-    return <PendingMembers applicants={applicants} approveMember={approveMember} onBack={() => setSubView('main')} />;
+    return <PendingMembers applicants={applicants} approveMember={approveMember} onBack={() => goSubView('main')} />;
   if (subView === 'all-members')
     return (
       <AllMembers
@@ -279,13 +290,13 @@ export const AdminDashboard = ({
         setSelectedMember={setSelectedMember}
         handleUpdateMember={handleUpdateMember}
         deleteDuplicateMember={deleteDuplicateMember}
-        onBack={() => setSubView('main')}
+        onBack={() => goSubView('main')}
       />
     );
   if (subView === 'overdue-members')
-    return <OverdueMembers overdueMembers={overdueMembers} onBack={() => setSubView('main')} onDeleteLoan={handleDeleteLoan} />;
+    return <OverdueMembers overdueMembers={overdueMembers} onBack={() => goSubView('main')} onDeleteLoan={handleDeleteLoan} />;
   if (subView === 'upload-status')
-    return <UploadStatus lastUploaded={lastUploaded} onBack={() => setSubView('main')} />;
+    return <UploadStatus lastUploaded={lastUploaded} onBack={() => goSubView('main')} />;
   if (subView === 'activities')
     return (
       <ActivityLog
@@ -294,13 +305,13 @@ export const AdminDashboard = ({
         overdueMembers={overdueMembers}
         activityFilter={activityFilter}
         setActivityFilter={setActivityFilter}
-        onBack={() => setSubView('main')}
+        onBack={() => goSubView('main')}
         onGotoApprovals={() => setSubView('members')}
         onDeleteLoan={handleDeleteLoan}
       />
     );
   if (subView === 'book-search')
-    return <BookSearchUpload onBack={() => setSubView('main')} />;
+    return <BookSearchUpload onBack={() => goSubView('main')} />;
 
   // === 메인 화면 ===
   return (
@@ -317,7 +328,7 @@ export const AdminDashboard = ({
           <span className="text-[10px] font-bold text-onSurfaceVariant mt-0.5 opacity-0">-</span>
         </div>
         <button
-          onClick={() => setSubView('overdue-members')}
+          onClick={() => goSubView('overdue-members')}
           className="bg-[#fcf8f7] p-3.5 rounded-2xl border-l-4 border-[#e2c1bb] shadow-sm text-left active:scale-95 transition-all flex flex-col relative"
         >
           <span className="text-[11px] font-bold text-onSurfaceVariant uppercase tracking-widest block mb-1.5 opacity-50">연체</span>
@@ -334,7 +345,7 @@ export const AdminDashboard = ({
             최근 활동
           </h3>
           <button
-            onClick={() => setSubView('activities')}
+            onClick={() => goSubView('activities')}
             className="text-primary font-bold text-[10px] flex items-center gap-1.5 bg-primary/8 px-2.5 py-1.5 rounded-lg active:scale-95 transition-all"
           >
             <ChevronRight size={11} />
@@ -390,7 +401,7 @@ export const AdminDashboard = ({
 
         <div className="grid grid-cols-4 gap-2 text-center">
           <button
-            onClick={() => setSubView('book-search')}
+            onClick={() => goSubView('book-search')}
             className="flex flex-col items-center justify-center gap-2 bg-[#e6eacb] text-primary py-3 px-1 rounded-xl transition-all active:scale-95"
           >
             <div className="p-2 bg-primary/15 rounded-lg">
@@ -401,7 +412,7 @@ export const AdminDashboard = ({
             </span>
           </button>
           <button
-            onClick={() => setSubView('members')}
+            onClick={() => goSubView('members')}
             className="flex flex-col items-center justify-center gap-2 bg-[#e6eacb] text-primary py-3 px-1 rounded-xl transition-all active:scale-95 relative"
           >
             <div className="p-2 bg-primary/15 rounded-lg">
@@ -417,7 +428,7 @@ export const AdminDashboard = ({
             )}
           </button>
           <button
-            onClick={() => setSubView('all-members')}
+            onClick={() => goSubView('all-members')}
             className="flex flex-col items-center justify-center gap-2 bg-[#e6eacb] text-primary py-3 px-1 rounded-xl transition-all active:scale-95"
           >
             <div className="p-2 bg-primary/15 rounded-lg">
@@ -428,7 +439,7 @@ export const AdminDashboard = ({
             </span>
           </button>
           <button
-            onClick={() => setSubView('activities')}
+            onClick={() => goSubView('activities')}
             className="flex flex-col items-center justify-center gap-2 bg-[#e6eacb] text-primary py-3 px-1 rounded-xl transition-all active:scale-95"
           >
             <div className="p-2 bg-primary/15 rounded-lg">

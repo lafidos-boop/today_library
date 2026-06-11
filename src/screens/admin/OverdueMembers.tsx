@@ -1,7 +1,7 @@
 // 관리자 — 연체자 목록 (실 대출에서 isOverdue=true 항목 추출).
 import React from 'react';
 import { AlertCircle, Phone, Trash2 } from 'lucide-react';
-import { ScreenWrapper, SubPageHeader } from '../../components/Layout';
+import { ScreenWrapper } from '../../components/Layout';
 
 type OverdueRow = { loanId?: number; name: string; bookTitle: string; loanDate: string; overdueDays: number; phone?: string };
 
@@ -15,12 +15,18 @@ export const OverdueMembers = ({
   onDeleteLoan?: (loanId: number, bookTitle: string) => void;
 }) => (
   <ScreenWrapper>
-    <SubPageHeader
-      icon={AlertCircle}
-      title="연체자 리스트"
-      extraTitle={<span className="text-lg text-error font-bold ml-2">(총 {overdueMembers.length}명)</span>}
-      onBack={onBack}
-    />
+    {/* 고정 타이틀 — 스크롤해도 상단에 유지 */}
+    <div className="sticky top-0 -mx-6 px-6 pt-3 pb-3 mb-3 bg-[#fafaed]/95 backdrop-blur-sm z-10 border-b border-[#e2e3d6]/30">
+      <div className="flex items-center gap-2.5">
+        <div className="p-1.5 bg-error/10 rounded-xl text-error flex-shrink-0">
+          <AlertCircle size={16} />
+        </div>
+        <h2 className="text-base font-black text-onSurface tracking-tight">
+          연체자 리스트
+          <span className="text-sm text-error font-bold ml-1.5">(총 {overdueMembers.length}명)</span>
+        </h2>
+      </div>
+    </div>
 
     <div className="space-y-2 pb-8">
       {overdueMembers.map((item, idx) => (

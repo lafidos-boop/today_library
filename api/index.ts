@@ -218,8 +218,8 @@ app.get('/api/avatars/:filename', async (req, res) => {
   }
 });
 
-const TARGET_SHEETS = ['새벽도서관', '별빛책방', '2호집지하'];
-const SHEET_PREFIX: { [key: string]: string } = { '새벽도서관': 'X', '별빛책방': 'Y', '2호집지하': 'Z' };
+const TARGET_SHEETS = ['새벽도서관', '별빛책방', '2호집지하', '2호집301호'];
+const SHEET_PREFIX: { [key: string]: string } = { '새벽도서관': 'X', '별빛책방': 'Y', '2호집지하': 'Z', '2호집301호': 'W' };
 
 async function logActivity(activity: { type: string; user?: string; book?: string; action?: string }) {
   try {

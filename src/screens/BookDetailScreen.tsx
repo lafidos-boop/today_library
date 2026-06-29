@@ -26,13 +26,12 @@ export const BookDetailScreen = ({
   const [loanCopied, setLoanCopied] = useState(false);
 
   const formatDate = (date: Date) =>
-    date.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })
-      .replace('. ', '.').replace('.', '').replace(' ', '.');
+    `${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 
   const handleLoanConfirm = async () => {
     const borrowDate = formatDate(new Date());
     const returnDate = formatDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000));
-    const text = `[대출합니다]\n1. 책제목: "${book.title}"\n2. 대출자이름: "${userName || ''}"\n3. 대출기간: "${borrowDate}" ~ "${returnDate}"`;
+    const text = `[대출합니다]\n1. 책제목: ${book.title}\n2. 대출자이름: ${userName || ''}\n3. 대출기간: ${borrowDate} ~ ${returnDate}`;
     try {
       await navigator.clipboard.writeText(text);
     } catch {

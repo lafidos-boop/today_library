@@ -104,7 +104,7 @@ export const MyLoansScreen = ({
   const handleReturnWithCopy = async () => {
     if (!activeAction) return;
     const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-    const text = `[반납합니다] "${activeAction.room}"\n1. 책제목: "${activeAction.bookTitle}"\n2. 대출자이름: "${userName}"\n3. 반납날짜: "${today}"`;
+    const text = `[반납합니다] ${activeAction.room}\n1. 책제목: ${activeAction.bookTitle}\n2. 대출자이름: ${userName}\n3. 반납날짜: ${today}`;
     await copyToClipboard(text);
     setActionCopied(true);
     setTimeout(() => {

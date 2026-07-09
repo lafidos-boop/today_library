@@ -13,6 +13,25 @@ import { BookSearchUpload } from './BookSearchUpload';
 
 type SubView = 'main' | 'members' | 'all-members' | 'overdue-members' | 'upload-status' | 'activities' | 'book-search';
 
+const ACTIVITY_RANGE_DAYS = 14;
+
+// showAll=false면 최근 14일만, true면 서버가 내려주는 최신 100건 전체를 보여줌
+const formatActivities = (actData: any[], showAll: boolean) => {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - ACTIVITY_RANGE_DAYS);
+  return actData
+    .filter((a: any) => showAll || new Date(a.time) >= cutoff)
+    .map((a: any) => ({
+      ...a,
+      time: new Date(a.time).toLocaleDateString('ko-KR', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    }));
+};
+
 export const AdminDashboard = ({
   setScreen,
   setBooks,
@@ -37,6 +56,8 @@ export const AdminDashboard = ({
   const [memberSearch, setMemberSearch] = useState('');
   const [allLoans, setAllLoans] = useState<any[]>([]);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [rawActivities, setRawActivities] = useState<any[]>([]);
+  const [showAllActivities, setShowAllActivities] = useState(false);
   const [lastUploaded, setLastUploaded] = useState<string | null>(null);
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>('all');
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
@@ -123,23 +144,8 @@ export const AdminDashboard = ({
       const actRes = await fetch('/api/activities');
       const actData = await actRes.json();
 
-      // 최근 7일 이내 활동만 필터링
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-      const filteredActs = actData
-        .filter((a: any) => new Date(a.time) >= oneWeekAgo)
-        .map((a: any) => ({
-          ...a,
-          time: new Date(a.time).toLocaleDateString('ko-KR', {
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-        }));
-
-      setRecentActivities(filteredActs);
+      setRawActivities(actData);
+      setRecentActivities(formatActivities(actData, showAllActivities));
     } catch (error) {
       console.error('Failed to fetch admin data:', error);
     }
@@ -154,24 +160,17 @@ export const AdminDashboard = ({
     fetch('/api/activities')
       .then((r) => r.json())
       .then((actData) => {
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        setRecentActivities(
-          actData
-            .filter((a: any) => new Date(a.time) >= oneWeekAgo)
-            .map((a: any) => ({
-              ...a,
-              time: new Date(a.time).toLocaleDateString('ko-KR', {
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-              }),
-            })),
-        );
+        setRawActivities(actData);
+        setRecentActivities(formatActivities(actData, showAllActivities));
       })
       .catch(() => {});
   }, [subView]);
+
+  // 원본 목록은 그대로 두고, "더 보기" 토글 시 재요청 없이 즉시 범위만 다시 계산
+  useEffect(() => {
+    if (rawActivities.length === 0) return;
+    setRecentActivities(formatActivities(rawActivities, showAllActivities));
+  }, [showAllActivities]);
 
   // 연체자 리스트는 실 대출(allLoans)에서 isOverdue=true인 항목을 추출 (백엔드에서 동적 계산됨)
   const overdueMembers = allLoans
@@ -308,6 +307,9 @@ export const AdminDashboard = ({
         onBack={() => goSubView('main')}
         onGotoApprovals={() => setSubView('members')}
         onDeleteLoan={handleDeleteLoan}
+        showAllActivities={showAllActivities}
+        onToggleShowAll={() => setShowAllActivities((v) => !v)}
+        rangeDays={ACTIVITY_RANGE_DAYS}
       />
     );
   if (subView === 'book-search')

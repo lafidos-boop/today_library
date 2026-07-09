@@ -14,6 +14,9 @@ export const ActivityLog = ({
   onBack,
   onGotoApprovals,
   onDeleteLoan,
+  showAllActivities,
+  onToggleShowAll,
+  rangeDays,
 }: {
   recentActivities: any[];
   applicants: any[];
@@ -23,6 +26,9 @@ export const ActivityLog = ({
   onBack: () => void;
   onGotoApprovals: () => void;
   onDeleteLoan?: (loanId: number, bookTitle: string) => void;
+  showAllActivities: boolean;
+  onToggleShowAll: () => void;
+  rangeDays: number;
 }) => {
   const filteredActivities =
     activityFilter === 'all' ? recentActivities : recentActivities.filter((a) => a.type === activityFilter);
@@ -68,6 +74,20 @@ export const ActivityLog = ({
 
       {/* ── 스크롤 영역: 리스트 ── */}
       <div className="flex-1 min-h-0 overflow-y-scroll px-6 pb-24 pt-4">
+
+      {activityFilter !== 'overdue' && (
+        <div className="flex items-center justify-between mb-3 px-1">
+          <span className="text-[10px] font-bold text-onSurfaceVariant/50">
+            {showAllActivities ? '전체 기록 표시 중' : `최근 ${rangeDays}일 기록 표시 중`}
+          </span>
+          <button
+            onClick={onToggleShowAll}
+            className="text-[10px] font-black text-primary bg-primary/5 px-3 py-1.5 rounded-lg active:scale-95 transition-all"
+          >
+            {showAllActivities ? `최근 ${rangeDays}일만 보기` : '이전 기록 더보기'}
+          </button>
+        </div>
+      )}
 
       {/* '연체' 탭: 현재 연체 중인 대출 목록 (loans 시트 기준) */}
       {activityFilter === 'overdue' ? (
@@ -188,7 +208,9 @@ export const ActivityLog = ({
             <div className="flex items-center gap-2 mb-3 px-1">
               <CheckCircle2 size={14} className="text-primary" />
               <h3 className="text-xs font-black text-onSurface uppercase tracking-widest">승인 기록</h3>
-              <span className="text-[10px] font-bold text-onSurfaceVariant/60">· {signupActivities.length}건 (최근 7일)</span>
+              <span className="text-[10px] font-bold text-onSurfaceVariant/60">
+                · {signupActivities.length}건 ({showAllActivities ? '전체' : `최근 ${rangeDays}일`})
+              </span>
             </div>
             {signupActivities.length > 0 ? (
               <div className="space-y-2">
@@ -211,7 +233,7 @@ export const ActivityLog = ({
               </div>
             ) : (
               <div className="bg-[#f4f5e7]/50 rounded-2xl py-6 text-center text-xs text-onSurfaceVariant/40 font-bold">
-                최근 7일 내 승인 기록이 없습니다.
+                {showAllActivities ? '승인 기록이 없습니다.' : `최근 ${rangeDays}일 내 승인 기록이 없습니다.`}
               </div>
             )}
           </section>

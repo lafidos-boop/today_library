@@ -750,7 +750,7 @@ app.post('/api/users', async (req, res) => {
       type: 'signup',
       user: newUser.name,
       action: '회원 가입 승인',
-      book: req.body.level === '관리자' ? '관리자 권한' : '일반 회원',
+      book: req.body.level === '관리자' ? '관리자' : '일반',
     });
     res.json(newUser);
   } catch (error) {

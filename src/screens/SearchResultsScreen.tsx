@@ -5,28 +5,50 @@ import { Search, Map as MapIcon, ChevronRight, AlertCircle } from 'lucide-react'
 import { ScreenWrapper } from '../components/Layout';
 import type { Book } from '../types';
 
+const formatKoreanDate = (s: string): string => {
+  const parts = s.split('.').map((p) => p.trim());
+  if (parts.length < 3) return s;
+  const [, m, d] = parts;
+  return `${parseInt(m, 10)}월 ${parseInt(d, 10)}일`;
+};
+
 export const SearchResultsScreen = ({
   query,
   results,
+  allBooks,
   selectBook,
   onSearch,
+  onShowLastAdded,
 }: {
   query: string;
   results: Book[];
+  allBooks: Book[];
   selectBook: (b: Book) => void;
   onSearch: (query: string) => void;
+  onShowLastAdded: (books: Book[]) => void;
 }) => {
   const [searchValue, setSearchValue] = useState(query);
+
+  let lastAddedDate = '';
+  let lastAddedBooks: Book[] = [];
+  if (query === '__NEW_BOOKS__' && results.length === 0) {
+    for (const b of allBooks) {
+      if (b.addedAt && b.addedAt > lastAddedDate) lastAddedDate = b.addedAt;
+    }
+    if (lastAddedDate) lastAddedBooks = allBooks.filter((b) => b.addedAt === lastAddedDate);
+  }
 
   return (
     <ScreenWrapper>
       <header className="mb-8 mt-2">
         <h1 className="text-3xl font-black text-onSurface mb-1">
-          {query === '__NEW_BOOKS__' ? '새로 들어온 도서' : '검색 결과'}
+          {query === '__NEW_BOOKS__' ? '새로 들어온 도서' : query === '__LAST_ADDED__' ? '마지막으로 등록된 도서' : '검색 결과'}
         </h1>
         <p className="text-onSurfaceVariant font-medium">
           {query === '__NEW_BOOKS__'
             ? '최근 한 달 안에 새로 등록된 도서예요.'
+            : query === '__LAST_ADDED__'
+            ? `${formatKoreanDate(results[0]?.addedAt || '')}에 등록된 도서예요.`
             : `"${query}"에 대한 검색 결과입니다.`}
         </p>
       </header>
@@ -97,13 +119,32 @@ export const SearchResultsScreen = ({
               </div>
             </div>
             <div className="z-10">
-              <p className="text-lg font-black text-onSurface mb-1 leading-snug">
-                저희가 보유하고 있지 않은 책입니다.
-              </p>
-              <p className="text-sm text-onSurfaceVariant font-medium opacity-60">
-                제목이나 저자명을 다시 한번 확인하시거나,<br />
-                다른 검색어를 입력해 보세요.
-              </p>
+              {query === '__NEW_BOOKS__' && lastAddedDate ? (
+                <>
+                  <p className="text-lg font-black text-onSurface mb-1 leading-snug">
+                    {formatKoreanDate(lastAddedDate)}에 마지막으로 등록되었습니다.
+                  </p>
+                  <p className="text-sm text-onSurfaceVariant font-medium opacity-60 mb-5">
+                    마지막으로 등록된 도서를 보시겠습니까?
+                  </p>
+                  <button
+                    onClick={() => onShowLastAdded(lastAddedBooks)}
+                    className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                  >
+                    마지막으로 등록된 도서 보기
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-black text-onSurface mb-1 leading-snug">
+                    저희가 보유하고 있지 않은 책입니다.
+                  </p>
+                  <p className="text-sm text-onSurfaceVariant font-medium opacity-60">
+                    제목이나 저자명을 다시 한번 확인하시거나,<br />
+                    다른 검색어를 입력해 보세요.
+                  </p>
+                </>
+              )}
             </div>
           </motion.div>
         </div>

@@ -202,9 +202,9 @@ export const ActivityLog = ({
                       <span className="text-[10px] text-onSurfaceVariant font-bold opacity-40">{item.time}</span>
                     </div>
                     <p className="text-sm font-medium text-onSurface leading-relaxed">
-                      <span className="font-black">{item.user}</span> 님이
-                      <span className="text-primary font-black mx-1">{item.book}</span>
-                      으로 <span className="font-black text-primary">{item.action}</span>되었습니다.
+                      <span className="font-black">{item.user}</span> 님을
+                      <span className="text-primary font-black mx-1">"{item.book}"</span>
+                      으로 <span className="font-black text-primary">{item.action}</span>하였습니다.
                     </p>
                   </div>
                 ))}
@@ -240,6 +240,12 @@ export const ActivityLog = ({
                     <>
                       <span className="font-black text-primary">"{item.book}"</span> 도서가{' '}
                       <span className="font-black text-onSurface">'{item.action}'</span>에 추가되었습니다.
+                    </>
+                  ) : item.type === 'signup' ? (
+                    <>
+                      <span className="font-black text-lg">{item.user}</span> 님을
+                      <span className="text-primary font-black mx-1">"{item.book}"</span>으로
+                      <span className="font-black text-error ml-1">{item.action}</span>
                     </>
                   ) : (
                     <>

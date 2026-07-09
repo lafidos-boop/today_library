@@ -196,6 +196,11 @@ export default function App() {
     setScreen('search-results');
   };
 
+  const handleShowLastAdded = (lastAddedBooks: Book[]) => {
+    setSearchQuery('__LAST_ADDED__');
+    setSearchResults(lastAddedBooks);
+  };
+
   const handleSearch = (query: string) => {
     const term = query.toLowerCase().trim();
     const loc = parseLocationQuery(query);
@@ -420,8 +425,10 @@ export default function App() {
               <SearchResultsScreen
                 query={searchQuery}
                 results={searchResults}
+                allBooks={books}
                 selectBook={(b) => navigateToBook(b, 'search-results')}
                 onSearch={handleSearch}
+                onShowLastAdded={handleShowLastAdded}
               />
             </motion.div>
           )}

@@ -12,6 +12,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { google } from 'googleapis';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,6 +25,42 @@ const ISBN_CACHE_PATH = path.join(__dirname, '..', 'data', 'isbn_cache.json');
 const AVATARS_DIR = path.join(__dirname, '..', 'data', 'avatars');
 
 app.use(express.json({ limit: '50mb' }));
+
+// =============================================================================
+// 인증 — 로그인 시 JWT 발급, 이후 요청은 Authorization: Bearer <token> 헤더로 검증
+// =============================================================================
+if (!process.env.JWT_SECRET) {
+  console.warn('[SECURITY WARNING] JWT_SECRET 환경변수가 설정되지 않았습니다. 개발용 임시 비밀키를 사용합니다 — 배포 전 반드시 Vercel 환경변수에 JWT_SECRET을 설정하세요.');
+}
+const JWT_SECRET = process.env.JWT_SECRET || 'INSECURE-DEV-ONLY-SECRET-CHANGE-ME';
+const JWT_EXPIRES_IN = '7d';
+
+interface AuthPayload { id: string; name: string; level: string; }
+
+function signToken(user: any): string {
+  return jwt.sign({ id: String(user.id), name: user.name, level: user.level }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+}
+
+function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return res.status(401).json({ error: '로그인이 필요합니다.' });
+  try {
+    (req as any).authUser = jwt.verify(token, JWT_SECRET) as AuthPayload;
+    next();
+  } catch {
+    return res.status(401).json({ error: '인증이 만료되었거나 유효하지 않습니다. 다시 로그인해 주세요.' });
+  }
+}
+
+function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  requireAuth(req, res, () => {
+    if ((req as any).authUser?.level !== '관리자') {
+      return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+    }
+    next();
+  });
+}
 
 // =============================================================================
 // sheetsDb — Google Sheets를 DB처럼 사용하는 추상화 레이어
@@ -417,7 +454,7 @@ app.get('/api/books', async (req, res) => {
   }
 });
 
-app.post('/api/books/sync', async (req, res) => {
+app.post('/api/books/sync', requireAdmin, async (req, res) => {
   try {
     const before = cachedBooks.length;
     const books = await fetchBooksFromGoogleSheet();
@@ -433,7 +470,7 @@ app.post('/api/books', async (req, res) => {
 });
 
 // 단일 도서를 구글 시트에 추가하고 캐시를 무효화
-app.post('/api/books/add', async (req, res) => {
+app.post('/api/books/add', requireAdmin, async (req, res) => {
   try {
     const { title, author, publisher, genre, isbn, cover, room, shelf, row, col } = req.body;
 
@@ -545,7 +582,7 @@ function colLetter(idx: number): string {
 }
 
 // 표지/ISBN이 없는 도서를 카카오 Books API로 채우고 구글 시트에 일괄 업데이트
-app.post('/api/books/enrich-covers', async (req, res) => {
+app.post('/api/books/enrich-covers', requireAdmin, async (req, res) => {
   try {
     const kakaoKey = process.env.VITE_KAKAO_API_KEY || process.env.KAKAO_API_KEY;
     if (!kakaoKey) return res.status(500).json({ error: 'KAKAO API 키가 설정되지 않았습니다.' });
@@ -638,7 +675,7 @@ app.post('/api/books/enrich-covers', async (req, res) => {
   }
 });
 
-app.get('/api/applications', async (req, res) => {
+app.get('/api/applications', requireAdmin, async (req, res) => {
   try { res.json(await sheetsDb.listAll('applications')); }
   catch (error) { console.error('GET /api/applications error:', error); res.json([]); }
 });
@@ -676,7 +713,7 @@ app.post('/api/applications', async (req, res) => {
   }
 });
 
-app.delete('/api/applications/:id', async (req, res) => {
+app.delete('/api/applications/:id', requireAdmin, async (req, res) => {
   try {
     await sheetsDb.deleteById('applications', parseInt(req.params.id));
     res.json({ success: true });
@@ -686,7 +723,7 @@ app.delete('/api/applications/:id', async (req, res) => {
   }
 });
 
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', requireAdmin, async (req, res) => {
   try {
     const users = await sheetsDb.listAll('users');
     res.json(users.map(stripSensitive));
@@ -710,14 +747,15 @@ app.post('/api/login', async (req, res) => {
       await sheetsDb.updateById('users', user.id, { password: hashed });
       console.log(`[login] auto-rehashed password for user "${name}"`);
     }
-    res.json(stripSensitive(user));
+    const token = signToken(user);
+    res.json({ ...stripSensitive(user), token });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: '로그인 처리 중 오류가 발생했습니다.' });
   }
 });
 
-app.post('/api/users', async (req, res) => {
+app.post('/api/users', requireAdmin, async (req, res) => {
   try {
     const hashedPassword = await hashIfPlain(req.body.password);
 
@@ -759,10 +797,16 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
-app.put('/api/users/:id', async (req, res) => {
+app.put('/api/users/:id', requireAuth, async (req, res) => {
   try {
+    const authUser = (req as any).authUser as AuthPayload;
     const { id } = req.params;
+    const isAdmin = authUser.level === '관리자';
+    if (!isAdmin && authUser.id !== id) {
+      return res.status(403).json({ error: '본인 정보만 수정할 수 있습니다.' });
+    }
     const updateData = { ...req.body };
+    if (!isAdmin) delete updateData.level; // 일반 회원은 권한(level) 변경 불가 — 관리자 자기 승격 방지
     if (updateData.password) updateData.password = await hashIfPlain(updateData.password);
     else delete updateData.password;
     // 프로필 이미지: Vercel 환경에서는 디스크 저장 불가 → base64를 직접 시트에 저장 (작은 이미지만)
@@ -791,7 +835,7 @@ app.put('/api/users/:id', async (req, res) => {
 // 대출 중인 bookId가 현재 도서 목록에 없는 항목을 찾아 bookTitle로 재매핑
 // GET  → 불일치 목록 조회 (dry-run)
 // POST → 실제 업데이트 실행
-app.get('/api/admin/fix-loan-bookids', async (req, res) => {
+app.get('/api/admin/fix-loan-bookids', requireAdmin, async (req, res) => {
   try {
     const [loans, books] = await Promise.all([
       sheetsDb.listAll('loans'),
@@ -816,7 +860,7 @@ app.get('/api/admin/fix-loan-bookids', async (req, res) => {
   }
 });
 
-app.post('/api/admin/fix-loan-bookids', async (req, res) => {
+app.post('/api/admin/fix-loan-bookids', requireAdmin, async (req, res) => {
   try {
     const [loans, books] = await Promise.all([
       sheetsDb.listAll('loans'),
@@ -843,7 +887,7 @@ app.post('/api/admin/fix-loan-bookids', async (req, res) => {
   }
 });
 
-app.get('/api/admin/loans', async (req, res) => {
+app.get('/api/admin/loans', requireAdmin, async (req, res) => {
   try {
     const loans = await sheetsDb.listAll('loans');
     res.json(loans.map(annotateLoan));
@@ -853,7 +897,7 @@ app.get('/api/admin/loans', async (req, res) => {
   }
 });
 
-app.delete('/api/users/:id', async (req, res) => {
+app.delete('/api/users/:id', requireAdmin, async (req, res) => {
   try {
     await sheetsDb.deleteById('users', req.params.id);
     res.json({ success: true });
@@ -863,9 +907,13 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
-app.get('/api/loans/:userId', async (req, res) => {
+app.get('/api/loans/:userId', requireAuth, async (req, res) => {
   try {
+    const authUser = (req as any).authUser as AuthPayload;
     const { userId } = req.params;
+    if (authUser.level !== '관리자' && authUser.id !== userId) {
+      return res.status(403).json({ error: '본인의 대출 내역만 조회할 수 있습니다.' });
+    }
     const loans = await sheetsDb.listAll('loans');
     res.json(loans.filter((l) => l.userId === userId).map(annotateLoan));
   } catch (error) {
@@ -874,9 +922,13 @@ app.get('/api/loans/:userId', async (req, res) => {
   }
 });
 
-app.post('/api/loans', async (req, res) => {
+app.post('/api/loans', requireAuth, async (req, res) => {
   try {
-    const { bookId } = req.body;
+    const authUser = (req as any).authUser as AuthPayload;
+    const { bookId, userId } = req.body;
+    if (authUser.level !== '관리자' && authUser.id !== userId) {
+      return res.status(403).json({ error: '본인 명의로만 대출할 수 있습니다.' });
+    }
     const loans = await sheetsDb.listAll('loans');
     if (loans.some((l) => String(l.bookId) === String(bookId))) {
       return res.status(400).json({ error: 'Already borrowed' });
@@ -896,10 +948,14 @@ app.post('/api/loans', async (req, res) => {
   }
 });
 
-app.delete('/api/loans/:id', async (req, res) => {
+app.delete('/api/loans/:id', requireAuth, async (req, res) => {
   try {
+    const authUser = (req as any).authUser as AuthPayload;
     const id = parseInt(req.params.id);
     const loanToDelete = await sheetsDb.findById('loans', id);
+    if (loanToDelete && authUser.level !== '관리자' && String(loanToDelete.userId) !== String(authUser.id)) {
+      return res.status(403).json({ error: '본인의 대출만 반납할 수 있습니다.' });
+    }
     await sheetsDb.deleteById('loans', id);
     if (loanToDelete) {
       await logActivity({
@@ -916,9 +972,16 @@ app.delete('/api/loans/:id', async (req, res) => {
   }
 });
 
-app.put('/api/loans/:id', async (req, res) => {
+app.put('/api/loans/:id', requireAuth, async (req, res) => {
   try {
+    const authUser = (req as any).authUser as AuthPayload;
     const id = parseInt(req.params.id);
+    if (authUser.level !== '관리자') {
+      const loan = await sheetsDb.findById('loans', id);
+      if (!loan || String(loan.userId) !== String(authUser.id)) {
+        return res.status(403).json({ error: '본인의 대출만 연장할 수 있습니다.' });
+      }
+    }
     const { returnDate, dDay } = req.body;
     await sheetsDb.updateById('loans', id, { returnDate, dDay });
     res.json({ success: true });
@@ -928,7 +991,7 @@ app.put('/api/loans/:id', async (req, res) => {
   }
 });
 
-app.get('/api/activities', async (req, res) => {
+app.get('/api/activities', requireAdmin, async (req, res) => {
   try {
     const all = await sheetsDb.listAll('activities');
     all.sort((a, b) => (b.time || '').localeCompare(a.time || ''));
@@ -940,10 +1003,14 @@ app.get('/api/activities', async (req, res) => {
 });
 
 // 사용자별 대출 기록 — 대출 항목마다 반납일 매칭해서 반환
-app.get('/api/history', async (req, res) => {
+app.get('/api/history', requireAuth, async (req, res) => {
   try {
+    const authUser = (req as any).authUser as AuthPayload;
     const name = String(req.query.name || '').trim();
     if (!name) return res.json([]);
+    if (authUser.level !== '관리자' && authUser.name !== name) {
+      return res.status(403).json({ error: '본인의 기록만 조회할 수 있습니다.' });
+    }
     const all = await sheetsDb.listAll('activities');
     const userActs = all
       .filter((a) => a.user === name)

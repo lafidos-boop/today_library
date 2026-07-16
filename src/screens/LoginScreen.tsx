@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Sprout, User, Clock } from 'lucide-react';
 import { toastApi } from '../toast';
+import { setAuthToken } from '../authFetch';
 
 export const LoginScreen = ({
   onLogin,
@@ -40,13 +41,14 @@ export const LoginScreen = ({
         return;
       }
 
-      const user = await response.json();
+      const { token, ...user } = await response.json();
 
       if (type === 'admin' && user.level !== '관리자') {
         toastApi.error('관리자 권한이 없습니다.');
         return;
       }
 
+      setAuthToken(token);
       localStorage.setItem('autologin_creds', JSON.stringify({ name, password }));
 
       if (type === 'admin') {

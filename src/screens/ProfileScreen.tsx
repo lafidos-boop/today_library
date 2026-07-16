@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Camera, Image as ImageIcon, X, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { ScreenWrapper } from '../components/Layout';
 import { toastApi } from '../toast';
+import { authFetch } from '../authFetch';
 
 export const ProfileScreen = ({
   currentUser,
@@ -42,7 +43,7 @@ export const ProfileScreen = ({
           setProfileImage(base64);
           // Persist to server (백엔드에서 base64 → 파일로 변환 후 URL 반환)
           try {
-            const res = await fetch(`/api/users/${currentUser.id}`, {
+            const res = await authFetch(`/api/users/${currentUser.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ profileImage: base64 }),
@@ -79,7 +80,7 @@ export const ProfileScreen = ({
         payload.password = formData.password;
       }
 
-      const res = await fetch(`/api/users/${currentUser.id}`, {
+      const res = await authFetch(`/api/users/${currentUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

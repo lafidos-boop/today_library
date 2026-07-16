@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, CheckCircle2, BookMarked, X } from 'lucide-react';
 import { ScreenWrapper } from '../components/Layout';
 import { toastApi } from '../toast';
+import { authFetch } from '../authFetch';
 import type { Book, Loan, LoanWithBook } from '../types';
 
 export const MyLoansScreen = ({
@@ -26,7 +27,7 @@ export const MyLoansScreen = ({
   useEffect(() => {
     if (!userName) return;
     setHistoryLoading(true);
-    fetch(`/api/history?name=${encodeURIComponent(userName)}`)
+    authFetch(`/api/history?name=${encodeURIComponent(userName)}`)
       .then((r) => r.json())
       .then((data) => setHistory(Array.isArray(data) ? data : []))
       .catch(() => setHistory([]))
@@ -129,9 +130,9 @@ export const MyLoansScreen = ({
 
     try {
       if (activeAction.type === 'return') {
-        await fetch(`/api/loans/${activeAction.loanId}`, { method: 'DELETE' });
+        await authFetch(`/api/loans/${activeAction.loanId}`, { method: 'DELETE' });
       } else {
-        await fetch(`/api/loans/${activeAction.loanId}`, {
+        await authFetch(`/api/loans/${activeAction.loanId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

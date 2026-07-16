@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronRight, FileSpreadsheet, Users, Clock, RefreshCw, ImagePlus, Activity, Zap } from 'lucide-react';
 import { ScreenWrapper } from '../../components/Layout';
 import { toastApi } from '../../toast';
+import { authFetch } from '../../authFetch';
 import type { Screen, Book } from '../../types';
 import { PendingMembers } from './PendingMembers';
 import { AllMembers } from './AllMembers';
@@ -68,12 +69,12 @@ export const AdminDashboard = ({
     if (isEnriching) return;
     setIsEnriching(true);
     try {
-      const r = await fetch('/api/books/enrich-covers', { method: 'POST' });
+      const r = await authFetch('/api/books/enrich-covers', { method: 'POST' });
       const data = await r.json();
       if (!r.ok) { toastApi.error(data.error || '표지 채우기 실패'); return; }
       toastApi.success(`표지 업데이트 완료 (${data.updated}권 갱신, ${data.notFound}권 미발견)`);
       // 갱신된 도서 반영
-      const booksRes = await fetch('/api/books/sync', { method: 'POST' });
+      const booksRes = await authFetch('/api/books/sync', { method: 'POST' });
       if (booksRes.ok) {
         const freshBooks = await fetch('/api/books').then(r => r.json());
         if (freshBooks?.length > 0) setBooks(freshBooks);
@@ -91,7 +92,7 @@ export const AdminDashboard = ({
     setIsSyncing(true);
     try {
       // 1단계: 서버 캐시 강제 갱신
-      const r = await fetch('/api/books/sync', { method: 'POST' });
+      const r = await authFetch('/api/books/sync', { method: 'POST' });
       const data = await r.json();
       if (!r.ok) {
         toastApi.error(data.error || '동기화에 실패했습니다.');
@@ -99,7 +100,7 @@ export const AdminDashboard = ({
       }
 
       // 2단계: 대출 bookId 불일치 자동 수정
-      const fixRes = await fetch('/api/admin/fix-loan-bookids', { method: 'POST' });
+      const fixRes = await authFetch('/api/admin/fix-loan-bookids', { method: 'POST' });
       if (fixRes.ok) {
         const fixData = await fixRes.json();
         const updated = fixData.results?.filter((r: any) => r.status === 'updated') ?? [];
@@ -132,16 +133,16 @@ export const AdminDashboard = ({
 
   const fetchData = async () => {
     try {
-      const appsRes = await fetch('/api/applications');
+      const appsRes = await authFetch('/api/applications');
       setApplicants(await appsRes.json());
 
-      const usersRes = await fetch('/api/users');
+      const usersRes = await authFetch('/api/users');
       setAllMembers(await usersRes.json());
 
-      const loansRes = await fetch('/api/admin/loans');
+      const loansRes = await authFetch('/api/admin/loans');
       setAllLoans(await loansRes.json());
 
-      const actRes = await fetch('/api/activities');
+      const actRes = await authFetch('/api/activities');
       const actData = await actRes.json();
 
       setRawActivities(actData);
@@ -157,7 +158,7 @@ export const AdminDashboard = ({
 
   useEffect(() => {
     if (subView !== 'activities') return;
-    fetch('/api/activities')
+    authFetch('/api/activities')
       .then((r) => r.json())
       .then((actData) => {
         setRawActivities(actData);
@@ -190,7 +191,7 @@ export const AdminDashboard = ({
   const handleDeleteLoan = async (loanId: number, bookTitle: string) => {
     if (!window.confirm(`"${bookTitle}" 대출 기록을 삭제하시겠습니까?`)) return;
     try {
-      const res = await fetch(`/api/loans/${loanId}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/loans/${loanId}`, { method: 'DELETE' });
       if (res.ok) {
         toastApi.success(`"${bookTitle}" 대출 기록이 삭제되었습니다.`);
         await fetchData();
@@ -212,7 +213,7 @@ export const AdminDashboard = ({
       const confirmDelete = window.confirm(`"${applicant.name}" 회원은 이미 존재합니다. 중복 가입을 방지하기 위해 신청 내역을 삭제할까요?`);
       if (confirmDelete) {
         try {
-          await fetch(`/api/applications/${id}`, { method: 'DELETE' });
+          await authFetch(`/api/applications/${id}`, { method: 'DELETE' });
           fetchData();
           toastApi.success('중복 신청 내역을 삭제했습니다.');
         } catch (e) {
@@ -224,7 +225,7 @@ export const AdminDashboard = ({
 
     try {
       // (이전 버그: password 누락으로 승인된 회원이 로그인 못 함 → applicant.password 함께 전송)
-      await fetch('/api/users', {
+      await authFetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -246,7 +247,7 @@ export const AdminDashboard = ({
 
   const handleUpdateMember = async (memberId: string, updateData: any) => {
     try {
-      const res = await fetch(`/api/users/${memberId}`, {
+      const res = await authFetch(`/api/users/${memberId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData),
@@ -264,7 +265,7 @@ export const AdminDashboard = ({
   const deleteDuplicateMember = async (memberId: string) => {
     if (!window.confirm('회원 정보를 영구적으로 삭제하시겠습니까?')) return;
     try {
-      const res = await fetch(`/api/users/${memberId}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/users/${memberId}`, { method: 'DELETE' });
       if (res.ok) {
         toastApi.success('회원 정보가 삭제되었습니다.');
         await fetchData();

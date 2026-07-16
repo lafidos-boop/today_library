@@ -17,6 +17,7 @@ import { BookDetailScreen } from './screens/BookDetailScreen';
 import { MyLoansScreen } from './screens/MyLoansScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { AdminDashboard } from './screens/admin/AdminDashboard';
+import { authFetch, setAuthToken } from './authFetch';
 
 // --- Main App Component ---
 
@@ -42,12 +43,14 @@ export default function App() {
           body: JSON.stringify({ name, password }),
         });
         if (res.ok) {
-          const user = await res.json();
+          const { token, ...user } = await res.json();
+          setAuthToken(token);
           setCurrentUser(user);
           setScreen('home');
         } else {
           // 인증 실패 시 저장된 정보 삭제
           localStorage.removeItem('autologin_creds');
+          setAuthToken(null);
         }
       } catch {
         // 네트워크 오류 시 로그인 화면으로
@@ -76,7 +79,7 @@ export default function App() {
     if (!currentUser) return;
     try {
       const [loansRes, booksRes] = await Promise.all([
-        fetch(`/api/loans/${currentUser.id}`),
+        authFetch(`/api/loans/${currentUser.id}`),
         fetch('/api/books'),
       ]);
       const [data, freshBooks] = await Promise.all([loansRes.json(), booksRes.json()]);
@@ -259,7 +262,7 @@ export default function App() {
     };
 
     try {
-      const res = await fetch('/api/loans', {
+      const res = await authFetch('/api/loans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newLoan)
@@ -312,7 +315,7 @@ export default function App() {
   const handleReturnFromDetail = async (loanId: number, bookTitle: string) => {
     if (!window.confirm(`'${bookTitle}'을(를) 반납하시겠어요?`)) return;
     try {
-      const res = await fetch(`/api/loans/${loanId}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/loans/${loanId}`, { method: 'DELETE' });
       if (res.ok) {
         await fetchBooks();
         await fetchLoans();
@@ -337,7 +340,7 @@ export default function App() {
 
     if (!window.confirm(`'${loan.book.title}'의 대출 기간을 ${newDate}까지 연장할까요?`)) return;
     try {
-      const res = await fetch(`/api/loans/${loan.id}`, {
+      const res = await authFetch(`/api/loans/${loan.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ returnDate: newDate, dDay: newDDay }),
@@ -470,6 +473,7 @@ export default function App() {
                 setCurrentUser={setCurrentUser}
                 onLogout={() => {
                   localStorage.removeItem('autologin_creds');
+                  setAuthToken(null);
                   setCurrentUser(null);
                   setScreen('login');
                 }}

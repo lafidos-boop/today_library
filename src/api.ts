@@ -3,15 +3,16 @@
 // 추후 인증 토큰/에러 인터셉터/JWT 만료 처리 등을 추가하기 좋은 자리.
 
 import type { Book } from './types';
+import { authFetch } from './authFetch';
 
 async function getJSON<T = any>(url: string): Promise<T> {
-  const r = await fetch(url);
+  const r = await authFetch(url);
   if (!r.ok) throw new Error(`GET ${url} failed: ${r.status}`);
   return r.json();
 }
 
 async function postJSON<T = any>(url: string, body: any, expectOk = true): Promise<{ ok: boolean; status: number; data: T }> {
-  const r = await fetch(url, {
+  const r = await authFetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -22,7 +23,7 @@ async function postJSON<T = any>(url: string, body: any, expectOk = true): Promi
 }
 
 async function putJSON<T = any>(url: string, body: any): Promise<T> {
-  const r = await fetch(url, {
+  const r = await authFetch(url, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -32,7 +33,7 @@ async function putJSON<T = any>(url: string, body: any): Promise<T> {
 }
 
 async function del(url: string): Promise<void> {
-  const r = await fetch(url, { method: 'DELETE' });
+  const r = await authFetch(url, { method: 'DELETE' });
   if (!r.ok) throw new Error(`DELETE ${url} failed: ${r.status}`);
 }
 

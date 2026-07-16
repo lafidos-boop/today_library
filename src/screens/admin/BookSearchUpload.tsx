@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Search, BookOpen, MapPin, Check, ChevronRight, Camera, ArrowLeft } from 'lucide-react';
 import { toastApi } from '../../toast';
+import { authFetch } from '../../authFetch';
 
 type BookResult = {
   title: string;
@@ -96,7 +97,7 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
     }
     setIsSaving(true);
     try {
-      const res = await fetch('/api/books/add', {
+      const res = await authFetch('/api/books/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

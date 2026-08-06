@@ -29,10 +29,23 @@ app.use(express.json({ limit: '50mb' }));
 // =============================================================================
 // 인증 — 로그인 시 JWT 발급, 이후 요청은 Authorization: Bearer <token> 헤더로 검증
 // =============================================================================
-if (!process.env.JWT_SECRET) {
-  console.warn('[SECURITY WARNING] JWT_SECRET 환경변수가 설정되지 않았습니다. 개발용 임시 비밀키를 사용합니다 — 배포 전 반드시 Vercel 환경변수에 JWT_SECRET을 설정하세요.');
+// 필수 환경변수 — 없으면 기동 자체를 중단한다(fail-closed).
+// 이전에는 JWT_SECRET이 없을 때 경고 로그만 남기고 하드코딩된 임시 키로 폴백했는데,
+// 이 저장소는 공개되어 있어 그 임시 키를 누구나 읽을 수 있다. 즉 환경변수 설정을 빠뜨리면
+// 아무도 모르는 사이에 누구나 관리자 토큰을 위조할 수 있는 상태로 정상 동작해 버린다.
+// 조용히 안전하지 않게 도는 것보다 시끄럽게 죽는 편이 낫다.
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(
+      `${name} 환경변수가 설정되지 않았습니다. ` +
+      `로컬은 .env.local에, 배포는 Vercel > 프로젝트 > Settings > Environment Variables에 설정하세요.`
+    );
+  }
+  return value;
 }
-const JWT_SECRET = process.env.JWT_SECRET || 'INSECURE-DEV-ONLY-SECRET-CHANGE-ME';
+
+const JWT_SECRET = requireEnv('JWT_SECRET');
 const JWT_EXPIRES_IN = '7d';
 
 interface AuthPayload { id: string; name: string; level: string; }

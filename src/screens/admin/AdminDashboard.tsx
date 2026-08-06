@@ -213,10 +213,12 @@ export const AdminDashboard = ({
       const confirmDelete = window.confirm(`"${applicant.name}" 회원은 이미 존재합니다. 중복 가입을 방지하기 위해 신청 내역을 삭제할까요?`);
       if (confirmDelete) {
         try {
-          await authFetch(`/api/applications/${id}`, { method: 'DELETE' });
-          fetchData();
+          const res = await authFetch(`/api/applications/${id}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error(`DELETE /api/applications/${id} → ${res.status}`);
+          await fetchData();
           toastApi.success('중복 신청 내역을 삭제했습니다.');
         } catch (e) {
+          console.error('Application delete failed:', e);
           toastApi.error('삭제 중 오류가 발생했습니다.');
         }
       }
@@ -225,7 +227,7 @@ export const AdminDashboard = ({
 
     try {
       // (이전 버그: password 누락으로 승인된 회원이 로그인 못 함 → applicant.password 함께 전송)
-      await authFetch('/api/users', {
+      const userRes = await authFetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -236,12 +238,20 @@ export const AdminDashboard = ({
           level: role,
         }),
       });
-      await fetch(`/api/applications/${id}`, { method: 'DELETE' });
+      if (!userRes.ok) {
+        const detail = await userRes.json().catch(() => ({}));
+        throw new Error(detail.error || `POST /api/users → ${userRes.status}`);
+      }
+      // 신청 내역 삭제도 관리자 인증이 필요하다 — authFetch로 호출하지 않으면 401이 나고
+      // 승인은 됐는데 신청서가 남아 '승인 대기'에 계속 표시된다.
+      const delRes = await authFetch(`/api/applications/${id}`, { method: 'DELETE' });
+      if (!delRes.ok) throw new Error(`DELETE /api/applications/${id} → ${delRes.status}`);
       await fetchData();
       toastApi.success(`"${applicant.name}" 회원의 승인이 완료되었습니다.`);
     } catch (error) {
       console.error('Approval failed:', error);
-      toastApi.error('승인 처리 중 오류가 발생했습니다.');
+      await fetchData();
+      toastApi.error(error instanceof Error ? error.message : '승인 처리 중 오류가 발생했습니다.');
     }
   };
 

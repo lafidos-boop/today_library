@@ -985,24 +985,7 @@ app.delete('/api/loans/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.put('/api/loans/:id', requireAuth, async (req, res) => {
-  try {
-    const authUser = (req as any).authUser as AuthPayload;
-    const id = parseInt(req.params.id);
-    if (authUser.level !== '관리자') {
-      const loan = await sheetsDb.findById('loans', id);
-      if (!loan || String(loan.userId) !== String(authUser.id)) {
-        return res.status(403).json({ error: '본인의 대출만 연장할 수 있습니다.' });
-      }
-    }
-    const { returnDate, dDay } = req.body;
-    await sheetsDb.updateById('loans', id, { returnDate, dDay });
-    res.json({ success: true });
-  } catch (error) {
-    console.error('PUT /api/loans error:', error);
-    res.status(500).json({ error: 'Failed to update loan' });
-  }
-});
+// 대출 연장 폐지 — 최초 대출을 4주로 주기로 하면서 PUT /api/loans/:id 는 사용처가 없어 제거.
 
 app.get('/api/activities', requireAdmin, async (req, res) => {
   try {

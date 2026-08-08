@@ -18,6 +18,7 @@ import { MyLoansScreen } from './screens/MyLoansScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { AdminDashboard } from './screens/admin/AdminDashboard';
 import { authFetch, setAuthToken } from './authFetch';
+import { LOAN_DAYS, addDays } from './loanPolicy';
 
 // --- Main App Component ---
 
@@ -256,8 +257,8 @@ export default function App() {
       bookId: book.id,
       bookTitle: book.title,
       borrowDate: new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('.', '').replace(' ', '.'),
-      returnDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('.', '').replace(' ', '.'),
-      dDay: -14,
+      returnDate: addDays(LOAN_DAYS).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('.', '').replace(' ', '.'),
+      dDay: -LOAN_DAYS,
       progress: 0
     };
 
@@ -326,33 +327,6 @@ export default function App() {
       }
     } catch (err) {
       console.error('Return failed:', err);
-      toastApi.error('서버와의 통신에 실패했습니다.');
-    }
-  };
-
-  const handleExtendFromDetail = async (loan: any) => {
-    const [m, d] = loan.returnDate.split('.').map(Number);
-    let nm = m;
-    let nd = d + 14;
-    if (nd > 30) { nm += 1; nd -= 30; }
-    const newDate = `${String(nm).padStart(2, '0')}.${String(nd).padStart(2, '0')}`;
-    const newDDay = (loan.dDay || 0) - 14;
-
-    if (!window.confirm(`'${loan.book.title}'의 대출 기간을 ${newDate}까지 연장할까요?`)) return;
-    try {
-      const res = await authFetch(`/api/loans/${loan.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ returnDate: newDate, dDay: newDDay }),
-      });
-      if (res.ok) {
-        await fetchLoans();
-        toastApi.success(`대출 기간이 ${newDate}까지 연장되었습니다.`);
-      } else {
-        toastApi.error('연장 처리 중 오류가 발생했습니다.');
-      }
-    } catch (err) {
-      console.error('Extend failed:', err);
       toastApi.error('서버와의 통신에 실패했습니다.');
     }
   };
@@ -447,7 +421,6 @@ export default function App() {
                     : undefined
                 }
                 onReturn={handleReturnFromDetail}
-                onExtend={handleExtendFromDetail}
                 userName={currentUser?.name}
               />
             </motion.div>

@@ -1,7 +1,7 @@
-// 내 대출 화면 — 대출 중인 도서 목록, 반납/연장 액션.
+// 내 대출 화면 — 대출 중인 도서 목록, 반납 액션.
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertCircle, CheckCircle2, BookMarked, X } from 'lucide-react';
+import { AlertCircle, BookMarked, X } from 'lucide-react';
 import { ScreenWrapper } from '../components/Layout';
 import { toastApi } from '../toast';
 import { authFetch } from '../authFetch';
@@ -44,46 +44,19 @@ export const MyLoansScreen = ({
   };
 
   const [activeAction, setActiveAction] = useState<{
-    type: 'return' | 'extend';
     loanId: number;
     bookId: string;
     bookTitle: string;
     room?: string;
-    borrowDate?: string;
-    newDate?: string;
-    newDDay?: number;
   } | null>(null);
   const [actionCopied, setActionCopied] = useState(false);
 
   const handleReturnRequest = (loan: any) => {
     setActiveAction({
-      type: 'return',
       loanId: loan.id,
       bookId: loan.bookId,
       bookTitle: loan.book.title,
       room: loan.book.location?.room || '',
-    });
-  };
-
-  const handleExtendRequest = (loan: any) => {
-    // MM.DD format — 2주(14일) 연장
-    const [m, d] = loan.returnDate.split('.').map(Number);
-    let nm = m;
-    let nd = d + 14;
-    if (nd > 30) {
-      nm += 1;
-      nd -= 30;
-    }
-    const newDate = `${String(nm).padStart(2, '0')}.${String(nd).padStart(2, '0')}`;
-
-    setActiveAction({
-      type: 'extend',
-      loanId: loan.id,
-      bookId: loan.bookId,
-      bookTitle: loan.book.title,
-      borrowDate: loan.borrowDate,
-      newDate,
-      newDDay: (loan.dDay || 0) - 14,
     });
   };
 
@@ -114,33 +87,11 @@ export const MyLoansScreen = ({
     }, 1400);
   };
 
-  const handleExtendWithCopy = async () => {
-    if (!activeAction) return;
-    const text = `[연장합니다]\n1. 책제목: ${activeAction.bookTitle}\n2. 연장자이름: ${userName}\n3. 대출기간: ${activeAction.borrowDate} ~ ${activeAction.newDate}`;
-    await copyToClipboard(text);
-    setActionCopied(true);
-    setTimeout(() => {
-      setActionCopied(false);
-      handleActionConfirm();
-    }, 1400);
-  };
-
   const handleActionConfirm = async () => {
     if (!activeAction) return;
 
     try {
-      if (activeAction.type === 'return') {
-        await authFetch(`/api/loans/${activeAction.loanId}`, { method: 'DELETE' });
-      } else {
-        await authFetch(`/api/loans/${activeAction.loanId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            returnDate: activeAction.newDate,
-            dDay: activeAction.newDDay,
-          }),
-        });
-      }
+      await authFetch(`/api/loans/${activeAction.loanId}`, { method: 'DELETE' });
       await refreshLoans();
     } catch (error) {
       console.error('Action failed:', error);
@@ -237,60 +188,34 @@ export const MyLoansScreen = ({
             exit={{ height: 0, opacity: 0, marginBottom: 0 }}
             className="overflow-hidden"
           >
-            <div className={`rounded-2xl p-5 border-2 ${activeAction.type === 'return' ? 'bg-[#fcf8f7] border-[#e2c1bb]/30' : 'bg-primary/5 border-primary/20'}`}>
+            <div className="rounded-2xl p-5 border-2 bg-[#fcf8f7] border-[#e2c1bb]/30">
               <div className="flex items-start gap-4 mb-4">
-                <div className={`p-2.5 rounded-xl ${activeAction.type === 'return' ? 'bg-[#af7c73]/10 text-[#af7c73]' : 'bg-primary/10 text-primary'}`}>
-                  {activeAction.type === 'return' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
+                <div className="p-2.5 rounded-xl bg-[#af7c73]/10 text-[#af7c73]">
+                  <AlertCircle size={20} />
                 </div>
                 <div className="flex-1">
-                  {activeAction.type === 'return' ? (
-                    <p className="text-sm font-bold text-onSurface leading-relaxed">
-                      <span className="font-black">'{activeAction.bookTitle}'</span>을 반납하려고 합니다.<br />
-                      책의 위치를 확인하고 꽂아 두셨을까요?
-                    </p>
-                  ) : (
-                    <p className="text-sm font-bold text-onSurface leading-relaxed">
-                      <span className="font-black">'{activeAction.bookTitle}'</span>의 대출기간이<br />
-                      <span className="text-primary font-black underline underline-offset-2">{activeAction.newDate}</span>까지 연장되었습니다.
-                    </p>
-                  )}
+                  <p className="text-sm font-bold text-onSurface leading-relaxed">
+                    <span className="font-black">'{activeAction.bookTitle}'</span>을 반납하려고 합니다.<br />
+                    책의 위치를 확인하고 꽂아 두셨을까요?
+                  </p>
                 </div>
               </div>
-              {activeAction.type === 'extend' ? (
-                <button
-                  onClick={handleExtendWithCopy}
-                  disabled={actionCopied}
-                  className="w-full py-3.5 rounded-xl font-black text-sm shadow-lg transition-all active:scale-95 bg-[#FEE500] text-black shadow-yellow-200/50 flex items-center justify-center gap-2 disabled:opacity-80"
-                >
-                  {actionCopied ? (
-                    '카카오톡 메세지가 복사되었습니다.'
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="black">
-                        <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.527 1.523 4.74 3.813 6.063l-.938 3.5 4.063-2.688A11.4 11.4 0 0 0 12 17.5c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
-                      </svg>
-                      카카오톡 메세지 복사 및 확인
-                    </>
-                  )}
-                </button>
-              ) : (
-                <button
-                  onClick={handleReturnWithCopy}
-                  disabled={actionCopied}
-                  className="w-full py-3.5 rounded-xl font-black text-sm shadow-lg transition-all active:scale-95 bg-[#FEE500] text-black shadow-yellow-200/50 flex items-center justify-center gap-2 disabled:opacity-80"
-                >
-                  {actionCopied ? (
-                    '카카오톡 메세지가 복사되었습니다.'
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="black">
-                        <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.527 1.523 4.74 3.813 6.063l-.938 3.5 4.063-2.688A11.4 11.4 0 0 0 12 17.5c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
-                      </svg>
-                      카카오톡 메세지 복사 및 확인
-                    </>
-                  )}
-                </button>
-              )}
+              <button
+                onClick={handleReturnWithCopy}
+                disabled={actionCopied}
+                className="w-full py-3.5 rounded-xl font-black text-sm shadow-lg transition-all active:scale-95 bg-[#FEE500] text-black shadow-yellow-200/50 flex items-center justify-center gap-2 disabled:opacity-80"
+              >
+                {actionCopied ? (
+                  '카카오톡 메세지가 복사되었습니다.'
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="black">
+                      <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.527 1.523 4.74 3.813 6.063l-.938 3.5 4.063-2.688A11.4 11.4 0 0 0 12 17.5c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
+                    </svg>
+                    카카오톡 메세지 복사 및 확인
+                  </>
+                )}
+              </button>
             </div>
           </motion.div>
         )}
@@ -336,22 +261,13 @@ export const MyLoansScreen = ({
                   </div>
                 </div>
 
-                <div className="flex gap-1.5">
-                  <button
-                    onClick={() => handleReturnRequest(loan)}
-                    disabled={!!activeAction}
-                    className="h-9 px-3.5 bg-surfaceContainerLow text-onSurfaceVariant text-[11px] font-black rounded-xl border border-[#e2e3d6]/50 active:scale-95 transition-all disabled:opacity-30"
-                  >
-                    반납하기
-                  </button>
-                  <button
-                    onClick={() => handleExtendRequest(loan)}
-                    disabled={!!activeAction || loan.isOverdue}
-                    className="h-9 px-3.5 bg-primary text-white text-[11px] font-black rounded-xl shadow-md shadow-primary/10 active:scale-95 transition-all disabled:opacity-30"
-                  >
-                    연장하기
-                  </button>
-                </div>
+                <button
+                  onClick={() => handleReturnRequest(loan)}
+                  disabled={!!activeAction}
+                  className="h-9 px-3.5 bg-primary text-white text-[11px] font-black rounded-xl shadow-md shadow-primary/10 active:scale-95 transition-all disabled:opacity-30"
+                >
+                  반납하기
+                </button>
               </div>
             </motion.div>
           ))

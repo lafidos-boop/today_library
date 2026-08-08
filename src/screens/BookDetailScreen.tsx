@@ -1,8 +1,9 @@
-// 도서 상세 화면 — 검색에서 진입 시 "대출하기", 내 대출에서 진입 시 "반납/연장" 버튼.
+// 도서 상세 화면 — 검색에서 진입 시 "대출하기", 내 대출에서 진입 시 "반납" 버튼.
 import React, { useState } from 'react';
-import { Map as MapIcon, RotateCcw, RefreshCw } from 'lucide-react';
+import { Map as MapIcon, RotateCcw } from 'lucide-react';
 import { ScreenWrapper } from '../components/Layout';
 import type { Book, LoanWithBook } from '../types';
+import { LOAN_DAYS, addDays } from '../loanPolicy';
 
 export const BookDetailScreen = ({
   book,
@@ -10,7 +11,6 @@ export const BookDetailScreen = ({
   onLoan,
   currentLoan,
   onReturn,
-  onExtend,
   userName,
 }: {
   book: Book;
@@ -18,7 +18,6 @@ export const BookDetailScreen = ({
   onLoan: (b: Book) => void;
   currentLoan?: LoanWithBook;
   onReturn?: (loanId: number, bookTitle: string) => void;
-  onExtend?: (loan: LoanWithBook) => void;
   userName?: string;
 }) => {
   const isMyLoan = !!currentLoan;
@@ -30,7 +29,7 @@ export const BookDetailScreen = ({
 
   const handleLoanConfirm = async () => {
     const borrowDate = formatDate(new Date());
-    const returnDate = formatDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000));
+    const returnDate = formatDate(addDays(LOAN_DAYS));
     const text = `[대출합니다]\n1. 책제목: ${book.title}\n2. 대출자이름: ${userName || ''}\n3. 대출기간: ${borrowDate} ~ ${returnDate}`;
     try {
       await navigator.clipboard.writeText(text);
@@ -117,7 +116,7 @@ export const BookDetailScreen = ({
         </div>
       </div>
 
-      {/* 내 대출 화면에서 진입한 경우: 대출기간 정보 + 반납/연장 버튼 */}
+      {/* 내 대출 화면에서 진입한 경우: 대출기간 정보 + 반납 버튼 */}
       {isMyLoan ? (
         <>
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#e2e3d6]/30 mb-6">
@@ -142,23 +141,13 @@ export const BookDetailScreen = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => onReturn && onReturn((currentLoan as any).id, book.title)}
-              className="py-4 rounded-xl font-black text-base bg-[#af7c73] text-white shadow-lg shadow-[#af7c73]/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              <RotateCcw size={18} />
-              반납하기
-            </button>
-            <button
-              onClick={() => onExtend && onExtend(currentLoan!)}
-              disabled={currentLoan!.isOverdue}
-              className="py-4 rounded-xl font-black text-base bg-primary text-white shadow-lg shadow-primary/20 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <RefreshCw size={18} />
-              대출 연장
-            </button>
-          </div>
+          <button
+            onClick={() => onReturn && onReturn((currentLoan as any).id, book.title)}
+            className="w-full py-4 rounded-xl font-black text-base bg-[#af7c73] text-white shadow-lg shadow-[#af7c73]/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <RotateCcw size={18} />
+            반납하기
+          </button>
         </>
       ) : (
         <>

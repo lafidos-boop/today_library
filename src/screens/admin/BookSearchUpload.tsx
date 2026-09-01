@@ -14,18 +14,23 @@ type BookResult = {
   description?: string;
 };
 
-const ROOMS = ['새벽도서관', '별빛책방'];
+// 서가/행/열 선택지는 각 열람실 시트에 실제로 쓰이고 있는 값의 범위와 맞춰야 한다.
+// 2호집지하(K서가)는 김근태도서관 단체 대출 도서를 통째로 교체하는 칸이라 낱권 추가 대상이 아니다.
+const ROOMS = ['새벽도서관', '별빛책방', '2호집301호'];
 const SHELF_OPTIONS: Record<string, string[]> = {
   '새벽도서관': ['A', 'B'],
   '별빛책방': ['D', 'E', 'F', 'G'],
+  '2호집301호': ['J'],
 };
 const ROW_OPTIONS: Record<string, number[]> = {
   '새벽도서관': [1, 2, 3, 4, 5, 6, 7],
   '별빛책방': [1, 2, 3],
+  '2호집301호': [1, 2, 3, 4, 5, 6],
 };
 const COL_OPTIONS: Record<string, number[]> = {
   '새벽도서관': [1, 2, 3, 4, 5],
   '별빛책방': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+  '2호집301호': [1, 2, 3, 4, 5],
 };
 
 export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
@@ -179,12 +184,12 @@ export const BookSearchUpload = ({ onBack }: { onBack: () => void }) => {
           <div className="space-y-4">
             <div>
               <label className="text-xs font-bold text-onSurfaceVariant px-1 block mb-2">열람실</label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {ROOMS.map((r) => (
                   <button
                     key={r}
                     onClick={() => setRoom(r)}
-                    className={`flex-1 py-3 rounded-xl text-sm font-black transition-all active:scale-95 ${
+                    className={`py-3 px-1 rounded-xl text-[13px] font-black whitespace-nowrap transition-all active:scale-95 ${
                       room === r
                         ? 'bg-primary text-white shadow-md shadow-primary/20'
                         : 'bg-[#e6eacb] text-primary'

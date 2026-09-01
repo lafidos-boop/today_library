@@ -269,7 +269,10 @@ app.get('/api/avatars/:filename', async (req, res) => {
 });
 
 const TARGET_SHEETS = ['새벽도서관', '별빛책방', '2호집지하', '2호집301호'];
-const SHEET_PREFIX: { [key: string]: string } = { '새벽도서관': 'X', '별빛책방': 'Y', '2호집지하': 'Z', '2호집301호': 'W' };
+// 도서코드 접두어 — 각 탭에 이미 쌓여 있는 실제 코드 체계를 따라야 한다.
+// 2호집301호는 J-00001~J-00789가 쓰이고 있는데 여기서 'W'로 잡으면
+// 기존 최대 번호를 못 찾아 새 도서가 W-00001부터 따로 매겨진다.
+const SHEET_PREFIX: { [key: string]: string } = { '새벽도서관': 'X', '별빛책방': 'Y', '2호집지하': 'Z', '2호집301호': 'J' };
 
 async function logActivity(activity: { type: string; user?: string; book?: string; action?: string }) {
   try {
